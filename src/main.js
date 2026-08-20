@@ -21,7 +21,7 @@ const copy=document.querySelector('#copy'),titleEl=document.querySelector('#titl
 const flash=document.querySelector('#flash'), heartLabel=document.createElement('div');
 const realTalkCards=document.querySelector('#realTalkCards'), compatibilityPanel=document.querySelector('#compatibilityPanel'); heartLabel.className='heart-label'; document.body.appendChild(heartLabel);
 
-const AUDIO_BASE='/audio/';
+const AUDIO_BASE='${import.meta.env.BASE_URL}audio/';
 const sounds={};
 function play(name){ if(!audioUnlocked)return; try{if(!sounds[name]){sounds[name]=new Audio(AUDIO_BASE+name);sounds[name].volume=.44} sounds[name].currentTime=0;sounds[name].play().catch(()=>{});}catch{}}
 function unlockAudio(){audioUnlocked=true;}
