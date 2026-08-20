@@ -14,10 +14,12 @@ function getViewport(){
   };
 }
 let VIEW=getViewport();
+const MOBILE_GPU_MODE = VIEW.w < 760 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
 
 const canvas=document.querySelector('#world');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
-renderer.setPixelRatio(Math.min(devicePixelRatio,getViewport().w<760?1.25:1.55)); renderer.setSize(VIEW.w,VIEW.h); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=.84; renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.setPixelRatio(Math.min(devicePixelRatio,getViewport().w<760?1.25:1.55)); renderer.setSize(VIEW.w,VIEW.h); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=.84; renderer.shadowMap.enabled=!MOBILE_GPU_MODE; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene(); scene.background=new THREE.Color(0x050416); scene.fog=new THREE.FogExp2(0x070513,.0095);
 const camera=new THREE.PerspectiveCamera(48,VIEW.w/VIEW.h,.1,500); camera.position.set(0,3.8,14.2);
 const composer=new EffectComposer(renderer); composer.addPass(new RenderPass(scene,camera)); const bloomPass=new UnrealBloomPass(new THREE.Vector2(VIEW.w,VIEW.h),.42,.62,.90); composer.addPass(bloomPass); composer.addPass(new OutputPass());
@@ -107,7 +109,13 @@ function addMesh(g,geo,m,p=[0,0,0],r=[0,0,0],s=[1,1,1]){const o=new THREE.Mesh(g
 function curveTube(points,r=.035,material=ropeMat,segments=32){const c=new THREE.CatmullRomCurve3(points);return new THREE.Mesh(new THREE.TubeGeometry(c,segments,r,7,false),material);}
 function heartGeometry(size=.55){const sh=new THREE.Shape();sh.moveTo(0,.24);sh.bezierCurveTo(-.58,.76,-1.14,.24,-.64,-.34);sh.lineTo(0,-.92);sh.lineTo(.64,-.34);sh.bezierCurveTo(1.14,.24,.58,.76,0,.24);return new THREE.ExtrudeGeometry(sh,{depth:.22*size,bevelEnabled:true,bevelSize:.09*size,bevelThickness:.08*size,bevelSegments:8,curveSegments:30});}
 function makeHeart(size=.55,colorMat=pink){const h=new THREE.Mesh(heartGeometry(size),colorMat.clone());h.geometry.center();h.scale.setScalar(size);h.castShadow=true;return h;}
-function glowLight(parent,color=0xff6cab,intensity=2,distance=8){const l=new THREE.PointLight(color,intensity,distance,2);parent.add(l);return l;}
+function glowLight(parent,color=0xff6cab,intensity=2,distance=8){
+ const l=new THREE.PointLight(color,intensity,distance,2);
+ l.userData.decorativeGlow=true;
+ l.userData.baseIntensity=intensity;
+ parent.add(l);
+ return l;
+}
 function sphere(g,r,m,p,s=[1,1,1]){return addMesh(g,new THREE.SphereGeometry(r,24,18),m,p,[0,0,0],s)}
 
 function makeCharacter({feminine=false,scale=1,shirt=0x7a5ab8,hairColor=0x241324}={}){
@@ -166,8 +174,8 @@ function makeCharacter({feminine=false,scale=1,shirt=0x7a5ab8,hairColor=0x241324
    shoulder.rotation.z=-side*.035;return {shoulder,elbow,hand};
  };
  const L=makeArm(-1),R=makeArm(1);
- const faceLight=new THREE.PointLight(feminine?0xff9bc8:0xa7bdff,.24,2.7,2);faceLight.position.set(0,2.25,.88);g.add(faceLight);
- const rimLight=new THREE.PointLight(0xbd83ec,.22,2.8,2);rimLight.position.set(0,1.9,-.9);g.add(rimLight);
+ const faceLight=new THREE.PointLight(feminine?0xff9bc8:0xa7bdff,.24,2.7,2);faceLight.userData.decorativeGlow=true;faceLight.userData.baseIntensity=.24;faceLight.position.set(0,2.25,.88);g.add(faceLight);
+ const rimLight=new THREE.PointLight(0xbd83ec,.22,2.8,2);rimLight.userData.decorativeGlow=true;rimLight.userData.baseIntensity=.22;rimLight.position.set(0,1.9,-.9);g.add(rimLight);
  // very small breathing/weight shift gives the characters life without looking like toys bouncing
  const phase=Math.random()*6.28;animations.push(t=>{if(!transitioning){g.rotation.z=Math.sin(t*.55+phase)*.004;head.rotation.y=Math.sin(t*.42+phase)*.025;}});
  g.userData={armLP:L.shoulder,armRP:R.shoulder,elbowL:L.elbow,elbowR:R.elbow,handL:L.hand,handR:R.hand,head,feminine,faceLight};return g;
@@ -560,8 +568,42 @@ let finalHeart;
 scene.add(new THREE.HemisphereLight(0x746b9d,0x06040d,.48));
 const rim=new THREE.DirectionalLight(0x9b86d2,.75);rim.position.set(-8,6,-6);scene.add(rim);
 const warmRim=new THREE.DirectionalLight(0xd783a8,.62);warmRim.position.set(8,3,4);scene.add(warmRim);
-const dl=new THREE.DirectionalLight(0xffd7e8,.82);dl.position.set(5,10,8);dl.castShadow=true;dl.shadow.mapSize.set(2048,2048);dl.shadow.camera.left=-16;dl.shadow.camera.right=16;dl.shadow.camera.top=16;dl.shadow.camera.bottom=-16;scene.add(dl);const moonFill=new THREE.PointLight(0x8e83bd,.30,70,2);moonFill.position.set(0,8,-8);scene.add(moonFill);const romanticFill=new THREE.PointLight(0xd86998,.22,55,2);romanticFill.position.set(7,3,6);scene.add(romanticFill);
+const dl=new THREE.DirectionalLight(0xffd7e8,.82);dl.position.set(5,10,8);dl.castShadow=!MOBILE_GPU_MODE;if(!MOBILE_GPU_MODE)dl.shadow.mapSize.set(2048,2048);dl.shadow.camera.left=-16;dl.shadow.camera.right=16;dl.shadow.camera.top=16;dl.shadow.camera.bottom=-16;scene.add(dl);const moonFill=new THREE.PointLight(0x8e83bd,.30,70,2);moonFill.position.set(0,8,-8);moonFill.visible=!MOBILE_GPU_MODE;scene.add(moonFill);const romanticFill=new THREE.PointLight(0xd86998,.22,55,2);romanticFill.position.set(7,3,6);romanticFill.visible=!MOBILE_GPU_MODE;scene.add(romanticFill);
 
+
+
+// Real phones have much lower fragment-shader light limits than laptop GPUs.
+// The complete experience contains many decorative PointLights across all 12 chapters.
+// On mobile, enable only a small number belonging to the CURRENT chapter.
+// Emissive materials + bloom remain active, so candles/hearts still visibly glow.
+function applyMobileLightBudget(){
+ if(!MOBILE_GPU_MODE)return;
+
+ // Turn off all decorative point lights first (including chapters currently off-camera).
+ scene.traverse(o=>{
+   if(o.isPointLight && o.userData?.decorativeGlow){
+     o.visible=false;
+   }
+ });
+
+ const group=chapterGroups[current];
+ if(!group)return;
+
+ // Keep only a modest number of real point lights in the active chapter.
+ // This avoids mobile shader compilation/uniform-limit failures.
+ const active=[];
+ group.traverse(o=>{
+   if(o.isPointLight && o.userData?.decorativeGlow) active.push(o);
+ });
+
+ const MAX_CHAPTER_POINT_LIGHTS=7;
+ active.slice(0,MAX_CHAPTER_POINT_LIGHTS).forEach(l=>{
+   l.visible=true;
+   if(l.userData.baseIntensity!==undefined && (!Number.isFinite(l.intensity)||l.intensity<=0)){
+     l.intensity=l.userData.baseIntensity;
+   }
+ });
+}
 
 // Fine mobile-only group offsets. They do not alter desktop positions.
 function applyMobileSceneOffsets(){
@@ -588,7 +630,7 @@ function applyMobileSceneOffsets(){
  if(chapterGroups[11])chapterGroups[11].position.x+=.20;
 }
 
-function showCopy(){const c=chapters[current];copy.classList.add('out');
+function showCopy(){applyMobileLightBudget();const c=chapters[current];copy.classList.add('out');
  document.body.className=`scene-${current+1}`;
  realTalkCards.classList.toggle('hidden',current!==4);
  compatibilityPanel.classList.toggle('hidden',current!==5);
@@ -953,6 +995,7 @@ showCopy();animate();
 function syncViewport(){
  VIEW=getViewport();
  applyMobileSceneOffsets();
+ applyMobileLightBudget();
  camera.aspect=VIEW.w/VIEW.h;
  camera.fov=targetFov();
  camera.position.z=targetCameraZ(current);
