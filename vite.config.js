@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: '/Personal_Universe/',
+  base: '/Personal_universe/',
 })
