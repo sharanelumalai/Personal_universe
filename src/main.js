@@ -458,13 +458,13 @@ function targetCameraZ(i){
   const {w,h}=getViewport();
   const portrait=w<760, narrow=w<1050;
   const ratio=h/w;
-  const mobileExtra=[6.4,6.1,6.6,7.2,6.5,6.6,6.7,6.6,6.6,6.5,6.3,6.4][i]||6.5;
-  const tallExtra=portrait && ratio>1.85 ? 1.0 : 0;
+  const mobileExtra=[3.3,3.0,3.5,3.8,3.4,3.3,3.5,3.6,3.6,3.3,3.2,3.4][i]||3.4;
+  const tallExtra=portrait && ratio>1.95 ? .55 : 0;
   return (cameraZ[i]||13.2)+(portrait?mobileExtra+tallExtra:narrow?1.5:0);
 }
 function targetFov(){
   const {w,h}=getViewport();
-  if(w<760) return (h/w>1.85)?65:62;
+  if(w<760) return (h/w>1.95)?58:56;
   return w<1050?52:48;
 }
 function tweenCamera(toIndex,dur=2750){if(transitioning)return;transitioning=true;const fromY=camera.position.y,toY=3.8-toIndex*sceneGap,fromZ=camera.position.z,toZ=targetCameraZ(toIndex), start=performance.now();copy.classList.add('out');magicBurst();setTimeout(()=>magicBurst(innerWidth*.52,innerHeight*.48),720);function step(now){const p=Math.min(1,(now-start)/dur),e=p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;camera.position.y=THREE.MathUtils.lerp(fromY,toY,e);camera.position.z=THREE.MathUtils.lerp(fromZ,toZ,e)-Math.sin(Math.PI*p)*.82;camera.rotation.z=Math.sin(Math.PI*p)*.012;if(p<1)requestAnimationFrame(step);else{camera.position.z=toZ;camera.rotation.z=0;transitioning=false;showCopy();}}requestAnimationFrame(step);}
@@ -593,7 +593,7 @@ function updateShootingStar(t){
  if(shootingStar){const p=(t-shootingStar.start)/1.35;if(p>=1){scene.remove(shootingStar.g);shootingStar=null;}else{shootingStar.g.position.x=8.5-p*17;shootingStar.g.position.y+=.018;shootingStar.g.children.forEach(o=>{if(o.material?.opacity!==undefined)o.material.opacity=Math.max(0,.55*(1-p));});}}
 }
 
-function animate(){requestAnimationFrame(animate);const shootT=clock.getElapsedTime();updateShootingStar(shootT);const t=shootT;animations.forEach(fn=>fn(t));if(pointerTarget&&!transitioning){const baseY=3.8-current*sceneGap;camera.position.x=THREE.MathUtils.lerp(camera.position.x,pointerTarget.x*1.15,.035);camera.position.y=THREE.MathUtils.lerp(camera.position.y,baseY-pointerTarget.y*.55,.035);camera.lookAt(camera.position.x*.04,baseY+(getViewport().w<760?2.90:2.55),-4.2);}else if(!transitioning){camera.lookAt(0,3.8-current*sceneGap+(getViewport().w<760?2.65:2.55),-4.2);} composer.render();}showCopy();animate();
+function animate(){requestAnimationFrame(animate);const shootT=clock.getElapsedTime();updateShootingStar(shootT);const t=shootT;animations.forEach(fn=>fn(t));if(pointerTarget&&!transitioning){const baseY=3.8-current*sceneGap;camera.position.x=THREE.MathUtils.lerp(camera.position.x,pointerTarget.x*1.15,.035);camera.position.y=THREE.MathUtils.lerp(camera.position.y,baseY-pointerTarget.y*.55,.035);camera.lookAt(camera.position.x*.04,baseY+(getViewport().w<760?-0.75:2.55),-4.2);}else if(!transitioning){const baseY=3.8-current*sceneGap;camera.lookAt(0,baseY+(getViewport().w<760?-0.85:2.55),-4.2);} composer.render();}showCopy();animate();
 function syncViewport(){
   VIEW=getViewport();
   camera.aspect=VIEW.w/VIEW.h;
@@ -609,4 +609,4 @@ addEventListener('orientationchange',()=>setTimeout(syncViewport,180));
 if(window.visualViewport){
   window.visualViewport.addEventListener('resize',syncViewport);
 }
-camera.fov=targetFov();camera.updateProjectionMatrix();
+syncViewport();
