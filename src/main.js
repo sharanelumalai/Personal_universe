@@ -34,21 +34,29 @@ const realTalkCards=document.querySelector('#realTalkCards'), compatibilityPanel
 
 const AUDIO_BASE=new URL('audio/',document.baseURI).href;
 const sounds={};
-function play(name){ if(!audioUnlocked)return; try{if(!sounds[name]){sounds[name]=new Audio(AUDIO_BASE+name);sounds[name].volume=.44} sounds[name].currentTime=0;sounds[name].play().catch(()=>{});}catch{}}
+function play(name){ if(!audioUnlocked)return; try{if(!sounds[name]){sounds[name]=new Audio(AUDIO_BASE+name);sounds[name].volume=.44} sounds[name].currentTime=0;sounds[name].play().catch(err=>console.warn('Audio failed:',name,sounds[name]?.src,err));}catch{}}
 function unlockAudio(){audioUnlocked=true;}
 let bgMusic=null,musicOn=false;
 const MUSIC_VOLUME=.18; // soft but clearly audible; lower to .12 or raise to .24 if you prefer
 function ensureBackgroundMusic(){
  if(!bgMusic){
-  bgMusic=new Audio(AUDIO_BASE+'ambient-love.wav');
-  bgMusic.loop=true;
-  bgMusic.preload='auto';
-  bgMusic.volume=MUSIC_VOLUME;
+   bgMusic=new Audio(AUDIO_BASE+'ambient-love.wav');
+   bgMusic.loop=true;
+   bgMusic.volume=MUSIC_VOLUME;
+   bgMusic.preload='auto';
+   bgMusic.playsInline=true;
  }
- if(audioUnlocked&&!musicOn){
-  bgMusic.volume=MUSIC_VOLUME;
-  const attempt=bgMusic.play();
-  if(attempt) attempt.then(()=>{musicOn=true;document.querySelector('#soundBtn').textContent='♫ Music On';}).catch(()=>{document.querySelector('#soundBtn').textContent='♫ Tap for Music';});
+ bgMusic.volume=MUSIC_VOLUME;
+ const attempt=bgMusic.play();
+ if(attempt){
+   attempt.then(()=>{
+     musicOn=true;
+     document.querySelector('#soundBtn').textContent='♫ Music On';
+   }).catch(err=>{
+     console.warn('Autoplay blocked until first interaction:',bgMusic?.src,err);
+     musicOn=false;
+     document.querySelector('#soundBtn').textContent='♫ Tap for Music';
+   });
  }
 }
 document.querySelector('#soundBtn').onclick=()=>{
@@ -57,6 +65,23 @@ document.querySelector('#soundBtn').onclick=()=>{
  if(musicOn){bgMusic.pause();musicOn=false;document.querySelector('#soundBtn').textContent='♫ Music Off';}
  else{ensureBackgroundMusic();}
 };
+
+// Try to start the romantic background music immediately.
+// Chrome/Safari on some phones may block audible autoplay; if so,
+// the very first user interaction starts it automatically.
+setTimeout(()=>ensureBackgroundMusic(),250);
+
+const startMusicOnFirstInteraction=()=>{
+  if(!musicOn){
+    unlockAudio();
+    ensureBackgroundMusic();
+  }
+  document.removeEventListener('pointerdown',startMusicOnFirstInteraction,true);
+  document.removeEventListener('touchstart',startMusicOnFirstInteraction,true);
+};
+document.addEventListener('pointerdown',startMusicOnFirstInteraction,true);
+document.addEventListener('touchstart',startMusicOnFirstInteraction,true);
+
 
 const chapters=[
  {n:'01',e:'WELCOME PAGE',t:'Hey You!',s:'I made something really special for you.',b:'Start Your Journey',a:()=>advance()},
@@ -145,7 +170,7 @@ function makeCharacter({feminine=false,scale=1,shirt=0x7a5ab8,hairColor=0x241324
  const rimLight=new THREE.PointLight(0xbd83ec,.22,2.8,2);rimLight.position.set(0,1.9,-.9);g.add(rimLight);
  // very small breathing/weight shift gives the characters life without looking like toys bouncing
  const phase=Math.random()*6.28;animations.push(t=>{if(!transitioning){g.rotation.z=Math.sin(t*.55+phase)*.004;head.rotation.y=Math.sin(t*.42+phase)*.025;}});
- g.userData={armLP:L.shoulder,armRP:R.shoulder,elbowL:L.elbow,elbowR:R.elbow,head,feminine,faceLight};return g;
+ g.userData={armLP:L.shoulder,armRP:R.shoulder,elbowL:L.elbow,elbowR:R.elbow,handL:L.hand,handR:R.hand,head,feminine,faceLight};return g;
 }
 function makeFlower(g,x,z,c=0xd96b9b,s=.12){
  const stem=addMesh(g,new THREE.CylinderGeometry(.012,.018,.34,7),mat(0x315f43),[x,.34,z]);
@@ -183,23 +208,30 @@ function lantern(){
  const g=new THREE.Group();
  addMesh(g,new THREE.CylinderGeometry(.038,.052,.92,10),mat(0x211925),[0,.45,0]);
  addMesh(g,new THREE.BoxGeometry(.52,.66,.52),mat(0x30212f),[0,.94,0]);
- const glass=new THREE.MeshPhysicalMaterial({color:0xffd5a0,emissive:0xc66c31,emissiveIntensity:.78,transparent:true,opacity:.72,roughness:.28,transmission:.08});
+ const glass=new THREE.MeshPhysicalMaterial({color:0xffe1b5,emissive:0xff8b45,emissiveIntensity:1.45,transparent:true,opacity:.80,roughness:.22,transmission:.10});
  addMesh(g,new THREE.BoxGeometry(.34,.47,.34),glass,[0,.94,0]);
  for(const sx of [-1,1])for(const sz of [-1,1])addMesh(g,new THREE.CylinderGeometry(.012,.012,.5,6),mat(0x211925),[sx*.21,.94,sz*.21]);
  addMesh(g,new THREE.ConeGeometry(.38,.25,4),mat(0x211925),[0,1.36,0],[0,Math.PI/4,0]);
  const handle=new THREE.Mesh(new THREE.TorusGeometry(.22,.025,7,20,Math.PI),mat(0x211925));handle.position.set(0,1.49,0);handle.rotation.x=Math.PI/2;g.add(handle);
- const l=glowLight(g,0xffa15f,1.16,5.2);l.position.y=.95;
- const flame=addMesh(g,new THREE.SphereGeometry(.055,9,7),mat(0xffc572,0xff7a32,1.28),[0,.95,0],[0,0,0],[.6,1.45,.6]);
- const phase=Math.random()*6.28;animations.push(t=>{flame.scale.y=1.15+Math.sin(t*7+phase)*.18;l.intensity=.82+Math.sin(t*8+phase)*.12;});
+ const l=glowLight(g,0xffa15f,2.15,6.8);l.position.y=.95;
+ const flame=addMesh(g,new THREE.SphereGeometry(.065,10,8),mat(0xffd184,0xff7a32,2.15),[0,.95,0],[0,0,0],[.68,1.60,.68]);
+ const phase=Math.random()*6.28;animations.push(t=>{
+   flame.scale.y=1.18+Math.sin(t*7+phase)*.20;
+   l.intensity=1.75+Math.sin(t*8+phase)*.22;
+ });
  return g;
 }
 function makeCandle(g,p=[0,0,0],scale=1){
  const c=new THREE.Group();c.position.set(...p);c.scale.setScalar(scale);g.add(c);
  addMesh(c,new THREE.CylinderGeometry(.07,.08,.42,14),mat(0xf0dfcf),[0,.21,0]);
  const wick=addMesh(c,new THREE.CylinderGeometry(.008,.008,.07,5),mat(0x2a1c25),[0,.46,0]);
- const flame=addMesh(c,new THREE.SphereGeometry(.065,10,8),mat(0xffbf69,0xff6d24,1.32),[0,.56,0],[0,0,0],[.62,1.45,.62]);
- const l=glowLight(c,0xff9a55,.82,3.8);l.position.y=.55;const ph=Math.random()*6;
- animations.push(t=>{flame.scale.y=1.15+Math.sin(t*9+ph)*.2;flame.rotation.z=Math.sin(t*5+ph)*.09;l.intensity=.54+Math.sin(t*8+ph)*.09;});return c;
+ const flame=addMesh(c,new THREE.SphereGeometry(.075,10,8),mat(0xffd58b,0xff6d24,2.25),[0,.56,0],[0,0,0],[.68,1.58,.68]);
+ const l=glowLight(c,0xffa05b,1.85,5.2);l.position.y=.55;const ph=Math.random()*6;
+ animations.push(t=>{
+   flame.scale.y=1.18+Math.sin(t*9+ph)*.22;
+   flame.rotation.z=Math.sin(t*5+ph)*.09;
+   l.intensity=1.45+Math.sin(t*8+ph)*.18;
+ });return c;
 }
 function radialGlowTexture(inner='#fff8df',mid='rgba(255,222,170,.34)',outer='rgba(255,190,220,0)'){
  const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');const g=x.createRadialGradient(128,128,0,128,128,128);g.addColorStop(0,inner);g.addColorStop(.18,'rgba(255,242,210,.34)');g.addColorStop(.46,mid);g.addColorStop(1,outer);x.fillStyle=g;x.fillRect(0,0,256,256);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;
@@ -232,7 +264,12 @@ function makeTree(){const g=new THREE.Group();
  return g;}
 function makeCloud(){const g=new THREE.Group();for(let i=0;i<8;i++)sphere(g,.72+Math.random()*.72,new THREE.MeshStandardMaterial({color:0x46325f,transparent:true,opacity:.34,roughness:1}),[(i-3.5)*.72,Math.sin(i)*.22,(Math.random()-.5)],[1.2,.72,1]);return g;}
 function ropeBetween(g,a,b,sag=.35){const mid=a.clone().lerp(b,.5);mid.y-=sag;const t=curveTube([a,mid,b],.025,ropeMat,22);g.add(t);return t;}
-function makePolaroid(i){const fr=new THREE.Group();const frame=addMesh(fr,new THREE.BoxGeometry(1.42,1.72,.12),mat(0xffe7dc,0xffb2cf,.12,.55),[0,0,0]);const loader=new THREE.TextureLoader();const pm=new THREE.MeshBasicMaterial({color:i%2?0x6f4063:0x34546c});const memoryUrl=(window.MEMORY_IMAGES&&window.MEMORY_IMAGES[i])||new URL(`memories/memory-${i+1}.svg`,document.baseURI).href;loader.load(memoryUrl,tex=>{tex.colorSpace=THREE.SRGBColorSpace;pm.map=tex;pm.color.set(0xffffff);pm.needsUpdate=true;},undefined,()=>{});addMesh(fr,new THREE.PlaneGeometry(1.16,1.12),pm,[0,.18,.067]);addMesh(fr,new THREE.BoxGeometry(.8,.035,.03),mat(0xd7a9ba),[0,-.61,.075]);return fr;}
+function makePolaroid(i){
+ const fr=new THREE.Group();
+ const frame=addMesh(fr,new THREE.BoxGeometry(1.42,1.72,.12),mat(0xfff0e7,0xff8fbd,.62,.48),[0,0,0]);
+ const frameGlow=glowLight(fr,0xff9d6f,.65,3.0);frameGlow.position.set(0,.05,.35);
+ const glowPhase=i*.9;
+ animations.push(t=>{frameGlow.intensity=.58+Math.sin(t*1.15+glowPhase)*.12;});const loader=new THREE.TextureLoader();const pm=new THREE.MeshBasicMaterial({color:i%2?0x6f4063:0x34546c});const memoryUrl=(window.MEMORY_IMAGES&&window.MEMORY_IMAGES[i])||new URL(`memories/memory-${i+1}.svg`,document.baseURI).href;loader.load(memoryUrl,tex=>{tex.colorSpace=THREE.SRGBColorSpace;pm.map=tex;pm.color.set(0xffffff);pm.needsUpdate=true;},undefined,()=>{});addMesh(fr,new THREE.PlaneGeometry(1.16,1.12),pm,[0,.18,.067]);addMesh(fr,new THREE.BoxGeometry(.8,.035,.03),mat(0xd7a9ba),[0,-.61,.075]);return fr;}
 function makeLoveMachine(){
  const r=new THREE.Group();
  // Retro love-bot inspired by the approved reference: rounded head, real body, limbs and animated controls.
@@ -349,9 +386,21 @@ let islandA,islandB,mergedIsland,joinHearts=[],boy2,girl2;
 
 // 4 Catch my heart — feathered wings and reaching girl
 let catchHeart,heartCatchMode=false,girlCatch;
-{const g=rootAt(2);const ground=makeIsland(.88);ground.position.set(-1.5,-1.35,0);g.add(ground);girlCatch=makeCharacter({feminine:true,scale:1.18,shirt:0xa74e91});girlCatch.position.set(-2.0,-.15,.35);girlCatch.rotation.y=.35;g.add(girlCatch);catchHeart=makeHeart(1.65,pink);catchHeart.position.set(2.25,2.45,0);g.add(catchHeart);glowLight(catchHeart,0xff5f9d,4.2,10);
+{const g=rootAt(2);const ground=makeIsland(.88);ground.position.set(-1.5,-1.35,0);g.add(ground);girlCatch=makeCharacter({feminine:true,scale:1.18,shirt:0xa74e91});girlCatch.position.set(-2.0,-.15,.35);girlCatch.rotation.y=.35;g.add(girlCatch);
+catchHeart=makeHeart(1.65,pink);catchHeart.position.set(2.25,2.45,0);g.add(catchHeart);
+const catchGlow=glowLight(catchHeart,0xff5f9d,4.2,10);
+catchHeart.userData.catchGlow=catchGlow;
+catchHeart.userData.baseGlow=4.2;
  for(const sx of [-1,1]){const wing=new THREE.Group();wing.position.set(sx*1.02,.14,0);catchHeart.add(wing);for(let j=0;j<6;j++){const feather=addMesh(wing,new THREE.CapsuleGeometry(.12,.78-j*.065,6,10),new THREE.MeshStandardMaterial({color:0xffedf8,emissive:0xffa7d0,emissiveIntensity:.75,transparent:true,opacity:.92}),[sx*(.28+j*.18),.16-j*.10,0],[0,0,sx*(1.05+j*.08)],[1,1,.36]);}animations.push(t=>{wing.rotation.z=sx*(.08+Math.sin(t*7)*.18);});}
- catchHeart.userData.type='catch';animations.push(t=>{catchHeart.position.y=2.5+Math.sin(t*2.2)*.42;catchHeart.position.x=2.25+Math.cos(t*.9)*.18;catchHeart.rotation.y=Math.sin(t)*.2;girlCatch.userData.armRP.rotation.z=-1.08+Math.sin(t*2)*.10;girlCatch.userData.elbowR.rotation.z=-.28+Math.sin(t*2)*.06;});fireflies(g,45,12);}
+ catchHeart.userData.type='catch';animations.push(t=>{
+ if(!heartCatchMode){
+  catchHeart.position.y=2.5+Math.sin(t*2.2)*.42;
+  catchHeart.position.x=2.25+Math.cos(t*.9)*.18;
+  catchHeart.rotation.y=Math.sin(t)*.2;
+  girlCatch.userData.armRP.rotation.z=-1.08+Math.sin(t*2)*.10;
+  girlCatch.userData.elbowR.rotation.z=-.28+Math.sin(t*2)*.06;
+ }
+});fireflies(g,45,12);}
 
 // 3 Memory lane — cinematic suspended walkway, hanging Polaroids, lantern tunnel
 const memoryFrames=[];
@@ -426,14 +475,80 @@ let scanBars=[];
 
 // 7 Heart Garden — dense blossom tree + hanging interactive heart lamps
 const gardenHearts=[];
-{const g=rootAt(6);const base=makeIsland(1.08);base.position.set(1.6,-1.55,0);g.add(base);const tree=makeTree();tree.position.set(2,-1.18,0);g.add(tree);const b=makeCharacter({scale:.82,shirt:0x566e9e});b.position.set(.8,-.4,1.0);g.add(b);for(let i=0;i<12;i++){const a=i/12*Math.PI*2,r=1.35+(i%3)*.7;const anchor=new THREE.Vector3(2+Math.cos(a)*r,5.2+Math.sin(a)*1.25,1.05+(i%2?.18:-.08));const h=makeHeart(.60,pink);h.position.copy(anchor);h.userData={type:'gardenHeart',index:i,base:h.scale.clone()};g.add(h);gardenHearts.push(h);interactives.push(h);h.material.emissiveIntensity=.52;const l=glowLight(h,0xff5a9f,1.35,3.8);l.position.z=.2;const cord=curveTube([new THREE.Vector3(anchor.x,anchor.y+.55,anchor.z),new THREE.Vector3(anchor.x,anchor.y+.15,anchor.z)],.015,ropeMat,6);g.add(cord);animations.push(t=>{h.rotation.y=Math.sin(t*.8+i)*.22;h.position.y=anchor.y+Math.sin(t*1.05+i)*.055;});}for(let i=0;i<8;i++)makeCandle(g,[-2.8+i*.8,-.55,2.0+Math.sin(i)*.4],.65);fireflies(g,72,15);}
+{const g=rootAt(6);const base=makeIsland(1.08);base.position.set(1.6,-1.55,0);g.add(base);const tree=makeTree();tree.position.set(2,-1.18,0);g.add(tree);const b=makeCharacter({scale:.82,shirt:0x566e9e});b.position.set(.8,-.4,1.0);g.add(b);const gardenAnchors=[
+[-2.70,2.10,1.55],
+[-1.55,3.05,1.60],
+[-.35,3.65,1.65],
+[.90,3.55,1.65],
+[2.10,3.00,1.60],
+[2.85,2.05,1.55]
+];
+for(let i=0;i<6;i++){
+ const p=gardenAnchors[i];
+ const anchor=new THREE.Vector3(2+p[0],2.25+p[1],p[2]);
+ const h=makeHeart(.68,pink);h.position.copy(anchor);
+ h.userData={type:'gardenHeart',index:i,base:h.scale.clone()};
+ g.add(h);gardenHearts.push(h);interactives.push(h);
+ h.material.emissiveIntensity=.68;
+ const l=glowLight(h,0xff5a9f,1.85,4.7);l.position.z=.2;
+ h.userData.glowLight=l;h.userData.baseGlow=1.85;h.userData.baseEI=.68;
+ const cord=curveTube([new THREE.Vector3(anchor.x,anchor.y+.55,anchor.z),new THREE.Vector3(anchor.x,anchor.y+.15,anchor.z)],.015,ropeMat,6);
+ g.add(cord);
+ animations.push(t=>{
+   h.rotation.y=Math.sin(t*.8+i)*.22;
+   h.position.y=anchor.y+Math.sin(t*1.05+i)*.055;
+   if(hoverObj!==h){
+     h.material.emissiveIntensity=.68+Math.sin(t*1.05+i)*.08;
+     l.intensity=1.85+Math.sin(t*.95+i)*.25;
+   }
+ });
+}
+const gardenCandlePos=[
+ [-1.15,-.62,.55],[-.30,-.62,.82],[.55,-.62,.98],[1.40,-.62,1.06],
+ [2.25,-.62,1.02],[3.10,-.62,.88],[3.95,-.62,.68],[4.45,-.62,.38]
+];
+gardenCandlePos.forEach(p=>makeCandle(g,p,.72));
+fireflies(g,72,15);}
 
 // 8/9 Question portals — richer fantasy gate
 for(let idx=7;idx<=8;idx++){const g=rootAt(idx);const base=makeIsland(.93);base.position.set(1,-1.55,0);g.add(base);allowEmptyIslandRotation(base,.0105);for(let i=0;i<2;i++){addMesh(g,new THREE.CylinderGeometry(.36,.54,6,18),mat(0x5d3a68,0x6b2f87,.65),[(i?1:-1)*3,1.8,0]);const l=lantern();l.position.set((i?1:-1)*3,4.4,.2);g.add(l);}const arch=new THREE.Mesh(new THREE.TorusGeometry(3,.34,14,44,Math.PI),mat(0x68407d,0xff66b3,.65));arch.position.set(0,4.7,0);g.add(arch);for(let i=0;i<9;i++){const h=makeHeart(.31,pink);h.position.set((i-4)*.72,1.1+Math.sin(i)*.45,.35);g.add(h);animations.push(t=>{h.rotation.y=t*(.35+i*.018);h.position.y=1.1+Math.sin(t+i)*.08;});}fireflies(g,65,13);}
 
 // 10 Thank-you tree + properly attached pointing arm
 const thanksHearts=[];let thanksBoy,thanksGirl;
-{const g=rootAt(9);const base=makeIsland(1.12);base.position.set(1.6,-1.55,0);g.add(base);const tree=makeTree();tree.position.set(2,-1.12,0);g.add(tree);thanksBoy=makeCharacter({scale:.94,shirt:0x536da0});thanksGirl=makeCharacter({feminine:true,scale:.94,shirt:0xa25090});thanksBoy.position.set(.45,-.38,1.15);thanksGirl.position.set(2.15,-.38,1.15);thanksBoy.rotation.y=.08;thanksGirl.rotation.y=-.08;g.add(thanksBoy,thanksGirl);for(let i=0;i<10;i++){const a=i/10*Math.PI*2,r=1.35+(i%2)*.95;const anchor=new THREE.Vector3(2+Math.cos(a)*r,5.15+Math.sin(a)*1.35,1.02);const h=makeHeart(.58,pink);h.position.copy(anchor);h.userData={type:'thanksHeart',index:i,base:h.scale.clone()};g.add(h);thanksHearts.push(h);interactives.push(h);h.material.emissiveIntensity=.48;glowLight(h,0xff4f9b,1.25,3.6);const cord=curveTube([new THREE.Vector3(anchor.x,anchor.y+.5,anchor.z),new THREE.Vector3(anchor.x,anchor.y+.12,anchor.z)],.014,ropeMat,6);g.add(cord);animations.push(t=>{h.rotation.y=Math.sin(t*.72+i)*.20;});}for(let i=0;i<9;i++)makeCandle(g,[-2.6+i*.7,-.55,2.1+Math.sin(i*.7)*.35],.65);fireflies(g,78,15);}
+{const g=rootAt(9);const base=makeIsland(1.12);base.position.set(1.6,-1.55,0);g.add(base);const tree=makeTree();tree.position.set(2,-1.12,0);g.add(tree);thanksBoy=makeCharacter({scale:.94,shirt:0x536da0});thanksGirl=makeCharacter({feminine:true,scale:.94,shirt:0xa25090});thanksBoy.position.set(.45,-.38,1.15);thanksGirl.position.set(2.15,-.38,1.15);thanksBoy.rotation.y=.08;thanksGirl.rotation.y=-.08;g.add(thanksBoy,thanksGirl);const thanksAnchors=[
+[-2.65,2.05,1.60],
+[-1.45,3.00,1.65],
+[-.25,3.60,1.70],
+[1.00,3.55,1.70],
+[2.15,2.95,1.65],
+[2.80,2.00,1.60]
+];
+for(let i=0;i<6;i++){
+ const p=thanksAnchors[i];
+ const anchor=new THREE.Vector3(2+p[0],2.25+p[1],p[2]);
+ const h=makeHeart(.66,pink);h.position.copy(anchor);
+ h.userData={type:'thanksHeart',index:i,base:h.scale.clone()};
+ g.add(h);thanksHearts.push(h);interactives.push(h);
+ h.material.emissiveIntensity=.82;
+ const thankGlow=glowLight(h,0xff5a9f,2.35,5.0);
+ h.userData.glowLight=thankGlow;h.userData.baseGlow=2.35;h.userData.baseEI=.82;
+ const cord=curveTube([new THREE.Vector3(anchor.x,anchor.y+.5,anchor.z),new THREE.Vector3(anchor.x,anchor.y+.12,anchor.z)],.014,ropeMat,6);
+ g.add(cord);
+ animations.push(t=>{
+   h.rotation.y=Math.sin(t*.72+i)*.20;
+   h.position.y=anchor.y+Math.sin(t*.95+i)*.045;
+   if(hoverObj!==h){
+     h.material.emissiveIntensity=.82+Math.sin(t*1.15+i)*.10;
+     thankGlow.intensity=2.35+Math.sin(t*1.05+i)*.32;
+   }
+ });
+}
+const thanksCandlePos=[
+ [-1.10,-.62,.48],[-.25,-.62,.76],[.60,-.62,.95],[1.45,-.62,1.05],
+ [2.30,-.62,1.02],[3.15,-.62,.90],[4.00,-.62,.70],[4.48,-.62,.42]
+];
+thanksCandlePos.forEach(p=>makeCandle(g,p,.72));
+fireflies(g,78,15);}
 
 // 11 Forever moon meadow
 {const g=rootAt(10);const isl=makeIsland(1.2);isl.position.set(1,-1.35,0);g.add(isl);const b=makeCharacter({scale:1.03,shirt:0x566fa5}),f=makeCharacter({feminine:true,scale:1.03,shirt:0xa24f90});b.position.set(.25,.0,.3);f.position.set(1.8,.0,.3);b.rotation.y=.08;f.rotation.y=-.08;g.add(b,f);const m=moon(2.45);m.position.set(1.1,5.55,-5.3);g.add(m);for(let i=0;i<24;i++){const h=makeHeart(.13,pink);h.position.set((Math.random()-.5)*10,Math.random()*7-1,(Math.random()-.5)*4);g.add(h);animations.push(t=>{h.position.y+=.0025;if(h.position.y>7)h.position.y=-1;h.rotation.y=t;});}fireflies(g,70,14);}
@@ -454,18 +569,21 @@ function applyMobileSceneOffsets(){
  chapterGroups.forEach((g,i)=>{
   if(!g)return;
   if(g.userData.baseX===undefined)g.userData.baseX=g.position.x;
+  if(g.userData.baseY===undefined)g.userData.baseY=g.position.y;
   g.position.x=g.userData.baseX;
+  g.position.y=g.userData.baseY;
  });
  if(!mobile)return;
  // Memory lane: center the walkway/frames.
  if(chapterGroups[3])chapterGroups[3].position.x-=.35;
- // Heart Garden: keep complete canopy + island visible.
- if(chapterGroups[6])chapterGroups[6].position.x-=.30;
+ // Heart Garden: move the complete tree downward so all hanging hearts
+ // stay below the text and inside a tall phone screen.
+ if(chapterGroups[6]){chapterGroups[6].position.x-=.30;chapterGroups[6].position.y-=.78;}
  // Question arches: center arch and island together.
  if(chapterGroups[7])chapterGroups[7].position.x+=.05;
  if(chapterGroups[8])chapterGroups[8].position.x+=.05;
- // Thank-you tree.
- if(chapterGroups[9])chapterGroups[9].position.x-=.25;
+ // Thank-you tree: same downward correction as the Heart Garden.
+ if(chapterGroups[9]){chapterGroups[9].position.x-=.25;chapterGroups[9].position.y-=.78;}
  // Finale: balance moon on left and large heart on right.
  if(chapterGroups[11])chapterGroups[11].position.x+=.20;
 }
@@ -491,7 +609,7 @@ function targetCameraZ(i){
   const {w,h}=getViewport();
   const portrait=w<760,narrow=w<1050;
   const ratio=h/w;
-  const tallExtra=portrait&&ratio>1.95?.45:0;
+  const tallExtra=portrait&&ratio>1.95?-.20:0;
   return (cameraZ[i]||13.2)+(portrait?(mobileExtraZ[i]||5.6)+tallExtra:narrow?1.5:0);
 }
 function targetFov(){
@@ -541,28 +659,110 @@ function connectWorlds(){
 }
 function catchHeartSequence(){
  if(heartCatchMode||!catchHeart?.visible)return;
- heartCatchMode=true;unlockAudio();magicBurst(getViewport().w*.68,getViewport().h*.48);
+ heartCatchMode=true;unlockAudio();
+
+ const glow=catchHeart.userData.catchGlow;
+ if(glow){glow.intensity=7.6;glow.distance=13.5;}
+ catchHeart.material.emissiveIntensity=2.6;
+ magicBurst(getViewport().w*.68,getViewport().h*.48);
+
  const st=performance.now();
  const from=catchHeart.position.clone();
- const target=new THREE.Vector3(-1.53,1.34,.60);
- const arm=girlCatch.userData.armRP, elbow=girlCatch.userData.elbowR;
- const armStart=arm.rotation.z, elbowStart=elbow.rotation.z;
+
+ const armR=girlCatch.userData.armRP, elbowR=girlCatch.userData.elbowR;
+ const armL=girlCatch.userData.armLP, elbowL=girlCatch.userData.elbowL;
+
+ const armR0=armR.rotation.z, armL0=armL.rotation.z;
+ const elbowR0=elbowR.rotation.z, elbowL0=elbowL.rotation.z;
+
+ const catchParent=catchHeart.parent;
+
+ function getChestTarget(){
+   // Move the heart to the girl's chest so BOTH arms can hug around it.
+   girlCatch.updateMatrixWorld(true);
+   catchParent.updateMatrixWorld(true);
+   const chestWorld=new THREE.Vector3(0,1.28,.72);
+   girlCatch.localToWorld(chestWorld);
+   const local=catchParent.worldToLocal(chestWorld.clone());
+   local.z+=.18;
+   return local;
+ }
+
  function step(n){
-  const p=Math.min(1,(n-st)/1550),e=1-Math.pow(1-p,3);
-  // girl reaches first, then the winged heart flies into her hand
-  arm.rotation.z=THREE.MathUtils.lerp(armStart,-1.42,Math.min(1,e*1.45));
-  elbow.rotation.z=THREE.MathUtils.lerp(elbowStart,-.62,Math.min(1,e*1.35));
-  const fly=Math.max(0,(p-.22)/.78),fe=1-Math.pow(1-Math.min(1,fly),3);
-  catchHeart.position.lerpVectors(from,target,fe);
-  catchHeart.rotation.z=Math.sin(p*Math.PI*5)*.12;
-  catchHeart.scale.setScalar(1-.52*fe);
-  if(p<1)requestAnimationFrame(step);else{
-   // Hold the heart beside her hand for a beat before continuing.
-   catchHeart.position.copy(target);catchHeart.rotation.set(0,0,-.08);catchHeart.scale.setScalar(.48);
-   magicBurst(getViewport().w*.48,getViewport().h*.47);play('success.mp3');
-   subEl.textContent='Got it… ❤️ It was always yours.';
-   setTimeout(()=>{heartCatchMode=false;advance()},1250);
-  }
+   const p=Math.min(1,(n-st)/1950);
+
+   // Heart starts glowing immediately and pulses while flying.
+   if(glow){
+     glow.intensity=7.0+Math.sin(p*Math.PI*8)*1.4;
+     glow.distance=13.2;
+   }
+   catchHeart.material.emissiveIntensity=2.4+Math.sin(p*Math.PI*8)*.45;
+
+   // Girl opens/reaches first, then wraps BOTH arms around the heart.
+   const reach=Math.min(1,p/.45);
+   const re=1-Math.pow(1-reach,3);
+
+   const hug=Math.max(0,(p-.40)/.60);
+   const he=1-Math.pow(1-Math.min(1,hug),3);
+
+   // reach
+   armR.rotation.z=THREE.MathUtils.lerp(armR0,-1.35,re);
+   armL.rotation.z=THREE.MathUtils.lerp(armL0, 1.10,re);
+   elbowR.rotation.z=THREE.MathUtils.lerp(elbowR0,-.58,re);
+   elbowL.rotation.z=THREE.MathUtils.lerp(elbowL0, .48,re);
+
+   // hug inward around chest
+   armR.rotation.z=THREE.MathUtils.lerp(armR.rotation.z,-1.02,he);
+   armL.rotation.z=THREE.MathUtils.lerp(armL.rotation.z, 1.02,he);
+   elbowR.rotation.z=THREE.MathUtils.lerp(elbowR.rotation.z,-1.10,he);
+   elbowL.rotation.z=THREE.MathUtils.lerp(elbowL.rotation.z, 1.10,he);
+
+   const fly=Math.max(0,(p-.12)/.88);
+   const fe=1-Math.pow(1-Math.min(1,fly),3);
+   const target=getChestTarget();
+
+   // Magical curved flight into her arms.
+   catchHeart.position.set(
+     THREE.MathUtils.lerp(from.x,target.x,fe),
+     THREE.MathUtils.lerp(from.y,target.y,fe)+Math.sin(Math.PI*fe)*.62,
+     THREE.MathUtils.lerp(from.z,target.z,fe)
+   );
+   catchHeart.rotation.z=Math.sin(fe*Math.PI*3)*.08;
+   catchHeart.rotation.y=THREE.MathUtils.lerp(catchHeart.rotation.y,0,fe);
+   catchHeart.scale.setScalar(1-.46*fe);
+
+   if(p<1)requestAnimationFrame(step);
+   else{
+     const held=getChestTarget();
+     catchHeart.position.copy(held);
+     catchHeart.rotation.set(0,0,0);
+     catchHeart.scale.setScalar(.54);
+
+     // Final hugging pose.
+     armR.rotation.z=-1.02;
+     armL.rotation.z= 1.02;
+     elbowR.rotation.z=-1.10;
+     elbowL.rotation.z= 1.10;
+
+     if(glow){glow.intensity=8.4;glow.distance=14.5;}
+     catchHeart.material.emissiveIntensity=3.0;
+
+     magicBurst(getViewport().w*.42,getViewport().h*.56);
+     play('success.mp3');
+     subEl.textContent='Got it… ❤️ It was always yours.';
+
+     // Hold the hug long enough to clearly see it.
+     setTimeout(()=>{
+       // Keep the hugged heart from returning to its old flying/idle path.
+       // Hide it exactly as the next chapter starts.
+       if(glow){glow.intensity=catchHeart.userData.baseGlow||4.2;glow.distance=10;}
+       catchHeart.material.emissiveIntensity=.85;
+       catchHeart.visible=false;
+       advance();
+       // Leave catch mode locked for this chapter so the idle animator
+       // can never bring the same heart back during the camera transition.
+     },1800);
+   }
  }
  requestAnimationFrame(step);
 }
@@ -610,7 +810,19 @@ const feedback=[
  ['What is something you have been afraid to tell me because you didn’t know how I would take it?','text']
 ];
 const fbPanel=document.querySelector('#feedbackPanel'), fields=document.querySelector('#feedbackFields');const answers={};
-function openFeedback(part){fields.innerHTML='';const list=part===0?feedback.slice(0,7):feedback.slice(7);list.forEach(([q,type,opts],j)=>{const idx=(part===0?0:7)+j;const lab=document.createElement('label');lab.textContent=`${idx+1}. ${q}`;fields.appendChild(lab);let el;if(type==='select'){el=document.createElement('select');el.innerHTML='<option value="">Choose…</option>'+opts.map(o=>`<option>${o}</option>`).join('')}else{el=document.createElement('textarea');el.placeholder='Write your answer…'}el.value=answers[idx]||'';el.oninput=()=>answers[idx]=el.value;el.onchange=()=>{answers[idx]=el.value;const next=fields.children[(j+1)*2];if(next)setTimeout(()=>next.scrollIntoView({behavior:'smooth',block:'start'}),180)};el.onfocus=()=>setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),120);fields.appendChild(el)});fbPanel.dataset.part=part;fbPanel.classList.remove('hidden')}
+function openFeedback(part){fields.innerHTML='';const list=part===0?feedback.slice(0,7):feedback.slice(7);list.forEach(([q,type,opts],j)=>{const idx=(part===0?0:7)+j;const lab=document.createElement('label');lab.textContent=`${idx+1}. ${q}`;fields.appendChild(lab);let el;if(type==='select'){el=document.createElement('select');el.innerHTML='<option value="">Choose…</option>'+opts.map(o=>`<option>${o}</option>`).join('')}else{el=document.createElement('textarea');el.placeholder='Write your answer…'}el.value=answers[idx]||'';el.oninput=()=>answers[idx]=el.value;el.onchange=()=>{answers[idx]=el.value;const next=fields.children[(j+1)*2];if(next)setTimeout(()=>next.scrollIntoView({behavior:'smooth',block:'start'}),180)};el.onfocus=()=>setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),120);fields.appendChild(el)});fbPanel.dataset.part=part;
+ fbPanel.classList.remove('hidden');
+ // The same dock is reused for Q1-7 and Q8-13. Reset its previous scroll
+ // position so part two always starts visibly at Question 8.
+ requestAnimationFrame(()=>{
+  fields.scrollTop=0;
+  fbPanel.scrollTop=0;
+  const scroller=fbPanel.querySelector('.feedback-scroll');
+  if(scroller)scroller.scrollTop=0;
+  const first=fields.querySelector('label');
+  first?.scrollIntoView({block:'start',behavior:'auto'});
+ });
+}
 document.querySelector('#submitFeedback').onclick=async()=>{const part=+fbPanel.dataset.part;if(part===0){fbPanel.classList.add('hidden');advance();return;} const status=document.querySelector('#feedbackStatus');status.textContent='Saving…';const endpoint=window.GOOGLE_SCRIPT_URL||'';try{if(endpoint)await fetch(endpoint,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({submittedAt:new Date().toISOString(),answers:feedback.map((q,i)=>({question:q[0],answer:answers[i]||''}))})});status.textContent=endpoint?'Saved ❤️':'Saved locally for demo. Add your Google Apps Script URL before publishing.';localStorage.setItem('love-feedback',JSON.stringify(answers));setTimeout(()=>{fbPanel.classList.add('hidden');advance()},900)}catch(e){status.textContent='Could not send. Your answers are kept on this device.';localStorage.setItem('love-feedback',JSON.stringify(answers));}}
 
 function pointBoyAt(target){
@@ -625,8 +837,57 @@ function pointBoyAt(target){
  const elbow=thanksBoy.userData.elbowR,elbowFrom=elbow.rotation.z;
  function a(n){const p=Math.min(1,(n-st)/720),e=1-Math.pow(1-p,3);arm.quaternion.slerpQuaternions(fromQ,targetQ,e);elbow.rotation.z=THREE.MathUtils.lerp(elbowFrom,-.06,e);if(p<1)requestAnimationFrame(a)}requestAnimationFrame(a)
 }
-function handleObject(o,event){if(o.userData.type==='memory'){magicBurst(event.clientX,event.clientY);openMemory(o.userData.index)}else if(o.userData.type==='gardenHeart'){magicBurst(event.clientX,event.clientY);play(`heart-${String(o.userData.index+1).padStart(2,'0')}.mp3`)}else if(o.userData.type==='thanksHeart'){magicBurst(event.clientX,event.clientY);pointBoyAt(o);play(`thanks-${String(o.userData.index+1).padStart(2,'0')}.mp3`)}else if(o.userData.type==='catch'){if(!heartCatchMode)return;magicBurst(event.clientX,event.clientY);heartCatchMode=false;const st=performance.now(),from=catchHeart.position.clone();function a(n){const p=Math.min(1,(n-st)/700);catchHeart.scale.setScalar(1+p*.8);catchHeart.rotation.z=p*Math.PI*2;if(p<1)requestAnimationFrame(a);else{catchHeart.visible=false;subEl.textContent='Fine… it was already yours anyway. ❤️';setTimeout(()=>advance(),1300)}}requestAnimationFrame(a)}}
-function pick(e){const vp=getViewport();mouse.x=e.clientX/vp.w*2-1;mouse.y=-(e.clientY/vp.h)*2+1;raycaster.setFromCamera(mouse,camera);const hit=raycaster.intersectObjects(interactives,true).find(h=>h.object.visible);let root=hit?.object;while(root && !root.userData.type)root=root.parent;if(hoverObj && hoverObj!==root){if(hoverObj.userData.base)hoverObj.scale.copy(hoverObj.userData.base);if(hoverObj.material&&hoverObj.userData.baseEI!==undefined)hoverObj.material.emissiveIntensity=hoverObj.userData.baseEI;}hoverObj=root||null;if(root){canvas.style.cursor='pointer';if(root.userData.base){root.scale.copy(root.userData.base).multiplyScalar(1.28);if(root.material&&root.material.emissive){if(root.userData.baseEI===undefined)root.userData.baseEI=root.material.emissiveIntensity||0;root.material.emissiveIntensity=Math.max(2.2,root.userData.baseEI*2.6);}}if(root.userData.type?.includes('Heart')){heartLabel.style.opacity=1;heartLabel.style.left=(e.clientX+12)+'px';heartLabel.style.top=(e.clientY-12)+'px';heartLabel.textContent='♥ Touch me';}}else{canvas.style.cursor='default';heartLabel.style.opacity=0;}}
+function handleObject(o,event){if(o.userData.type==='memory'){magicBurst(event.clientX,event.clientY);openMemory(o.userData.index)}else if(o.userData.type==='gardenHeart'){
+ magicBurst(event.clientX,event.clientY);
+ if(o.userData.glowLight){
+   o.userData.glowLight.intensity=7.5;o.userData.glowLight.distance=7.2;
+   o.material.emissiveIntensity=2.8;
+   const base=o.userData.base?.clone();
+   if(base)o.scale.copy(base).multiplyScalar(1.34);
+   setTimeout(()=>{
+     o.userData.glowLight.intensity=o.userData.baseGlow||1.85;
+     o.userData.glowLight.distance=4.7;
+     o.material.emissiveIntensity=o.userData.baseEI||.68;
+     if(base)o.scale.copy(base);
+   },700);
+ }
+ play(`heart-${String(o.userData.index+1).padStart(2,'0')}.mp3`);
+}else if(o.userData.type==='thanksHeart'){
+ magicBurst(event.clientX,event.clientY);
+ pointBoyAt(o);
+ if(o.userData.glowLight){
+   o.userData.glowLight.intensity=7.2;
+   o.userData.glowLight.distance=7.0;
+   const base=o.userData.base?.clone();
+   if(base)o.scale.copy(base).multiplyScalar(1.38);
+   setTimeout(()=>{
+     if(o.userData.glowLight){
+       o.userData.glowLight.intensity=o.userData.baseGlow||1.55;
+       o.userData.glowLight.distance=4.1;
+     }
+     if(base)o.scale.copy(base);
+   },700);
+ }
+ play(`thanks-${String(o.userData.index+1).padStart(2,'0')}.mp3`);
+}else if(o.userData.type==='catch'){if(!heartCatchMode)return;magicBurst(event.clientX,event.clientY);heartCatchMode=false;const st=performance.now(),from=catchHeart.position.clone();function a(n){const p=Math.min(1,(n-st)/700);catchHeart.scale.setScalar(1+p*.8);catchHeart.rotation.z=p*Math.PI*2;if(p<1)requestAnimationFrame(a);else{catchHeart.visible=false;subEl.textContent='Fine… it was already yours anyway. ❤️';setTimeout(()=>advance(),1300)}}requestAnimationFrame(a)}}
+function pick(e){const vp=getViewport();mouse.x=e.clientX/vp.w*2-1;mouse.y=-(e.clientY/vp.h)*2+1;raycaster.setFromCamera(mouse,camera);const hit=raycaster.intersectObjects(interactives,true).find(h=>h.object.visible);let root=hit?.object;while(root && !root.userData.type)root=root.parent;if(hoverObj && hoverObj!==root){
+ if(hoverObj.userData.base)hoverObj.scale.copy(hoverObj.userData.base);
+ if(hoverObj.material&&hoverObj.userData.baseEI!==undefined)hoverObj.material.emissiveIntensity=hoverObj.userData.baseEI;
+ if((hoverObj.userData.type==='thanksHeart'||hoverObj.userData.type==='gardenHeart')&&hoverObj.userData.glowLight){
+   hoverObj.userData.glowLight.intensity=hoverObj.userData.baseGlow||1.85;
+   hoverObj.userData.glowLight.distance=hoverObj.userData.type==='thanksHeart'?5.0:4.7;
+ }
+}hoverObj=root||null;if(root){canvas.style.cursor='pointer';if(root.userData.base){
+ root.scale.copy(root.userData.base).multiplyScalar(1.28);
+ if(root.material&&root.material.emissive){
+   if(root.userData.baseEI===undefined)root.userData.baseEI=root.material.emissiveIntensity||0;
+   root.material.emissiveIntensity=Math.max(2.2,root.userData.baseEI*2.6);
+ }
+ if(root.userData.type==='thanksHeart'&&root.userData.glowLight){
+   root.userData.glowLight.intensity=4.9;
+   root.userData.glowLight.distance=5.8;
+ }
+}if(root.userData.type?.includes('Heart')){heartLabel.style.opacity=1;heartLabel.style.left=(e.clientX+12)+'px';heartLabel.style.top=(e.clientY-12)+'px';heartLabel.textContent='♥ Touch me';}}else{canvas.style.cursor='default';heartLabel.style.opacity=0;}}
 addEventListener('pointermove',e=>{pick(e);const vp=getViewport();pointerTarget={x:e.clientX/vp.w-.5,y:e.clientY/vp.h-.5};});addEventListener('pointerdown',e=>{unlockAudio();pick(e);if(hoverObj)handleObject(hoverObj,e)});
 
 // subtle drag/look parallax and scroll safeguard
@@ -655,10 +916,19 @@ function animate(){
  if(!transitioning){
   if(mobile){
    const desiredX=mobileCameraX[current]||0;
+   const tallPhone=vp.h/vp.w>1.95;
    camera.position.x=THREE.MathUtils.lerp(camera.position.x,desiredX,.045);
    const parY=pointerTarget?-pointerTarget.y*.10:0;
    camera.position.y=THREE.MathUtils.lerp(camera.position.y,baseY+parY,.05);
-   camera.lookAt(mobileLookX[current]||0,baseY+(mobileLookYOffset[current]||1.2),-4.2);
+   // Modern real phones are much taller than the 375x667 DevTools preset.
+   // Aim lower only on those tall devices; this is what keeps islands,
+   // characters, trees and moons inside the actual phone viewport.
+   const tallLookCorrection=tallPhone?-1.45:0;
+   camera.lookAt(
+     mobileLookX[current]||0,
+     baseY+(mobileLookYOffset[current]||1.2)+tallLookCorrection,
+     -4.2
+   );
   }else if(pointerTarget){
    camera.position.x=THREE.MathUtils.lerp(camera.position.x,pointerTarget.x*1.15,.035);
    camera.position.y=THREE.MathUtils.lerp(camera.position.y,baseY-pointerTarget.y*.55,.035);
