@@ -66,7 +66,7 @@ function play(name){ if(!audioUnlocked)return; try{if(!sounds[name]){sounds[name
 function unlockAudio(){audioUnlocked=true;}
 let bgMusic=null,musicOn=false;
 const MUSIC_VOLUME=.18; // soft but clearly audible; lower to .12 or raise to .24 if you prefer
-function ensureBackgroundMusic(){
+function ensureBackgroundMusic({fromGesture=false}={}){
  if(!bgMusic){
    bgMusic=new Audio(AUDIO_BASE+'ambient-love.wav');
    bgMusic.loop=true;
@@ -74,41 +74,84 @@ function ensureBackgroundMusic(){
    bgMusic.preload='auto';
    bgMusic.playsInline=true;
  }
+
  bgMusic.volume=MUSIC_VOLUME;
+
+ // A genuine user gesture is allowed to start audible media.
+ if(fromGesture){
+   bgMusic.muted=false;
+   const p=bgMusic.play();
+   if(p){
+     p.then(()=>{
+       musicOn=true;
+       document.querySelector('#soundBtn').textContent='♫ Music On';
+     }).catch(err=>{
+       console.warn('Music could not start:',bgMusic?.src,err);
+       musicOn=false;
+       document.querySelector('#soundBtn').textContent='♫ Tap for Music';
+     });
+   }
+   return;
+ }
+
+ // First try normal audible autoplay.
+ bgMusic.muted=false;
  const attempt=bgMusic.play();
  if(attempt){
    attempt.then(()=>{
      musicOn=true;
      document.querySelector('#soundBtn').textContent='♫ Music On';
-   }).catch(err=>{
-     console.warn('Autoplay blocked until first interaction:',bgMusic?.src,err);
-     musicOn=false;
-     document.querySelector('#soundBtn').textContent='♫ Tap for Music';
+   }).catch(async err=>{
+     console.warn('Audible autoplay blocked:',bgMusic?.src,err);
+
+     // Muted autoplay is normally permitted. Prime the file so the first
+     // user interaction can make it audible instantly without loading delay.
+     try{
+       bgMusic.muted=true;
+       await bgMusic.play();
+       musicOn=false;
+       document.querySelector('#soundBtn').textContent='♫ Tap for Music';
+     }catch(primeErr){
+       console.warn('Muted music preload also failed:',primeErr);
+       musicOn=false;
+       document.querySelector('#soundBtn').textContent='♫ Tap for Music';
+     }
    });
  }
 }
 document.querySelector('#soundBtn').onclick=()=>{
  unlockAudio();
- if(!bgMusic){ensureBackgroundMusic();return;}
- if(musicOn){bgMusic.pause();musicOn=false;document.querySelector('#soundBtn').textContent='♫ Music Off';}
- else{ensureBackgroundMusic();}
+ if(!bgMusic){
+   ensureBackgroundMusic({fromGesture:true});
+   return;
+ }
+ if(musicOn){
+   bgMusic.pause();
+   bgMusic.muted=false;
+   musicOn=false;
+   document.querySelector('#soundBtn').textContent='♫ Music Off';
+ }else{
+   ensureBackgroundMusic({fromGesture:true});
+ }
 };
 
 // Try to start the romantic background music immediately.
 // Chrome/Safari on some phones may block audible autoplay; if so,
 // the very first user interaction starts it automatically.
-setTimeout(()=>ensureBackgroundMusic(),250);
+setTimeout(()=>ensureBackgroundMusic(),80);
 
 const startMusicOnFirstInteraction=()=>{
+  unlockAudio();
   if(!musicOn){
-    unlockAudio();
-    ensureBackgroundMusic();
+    ensureBackgroundMusic({fromGesture:true});
   }
   document.removeEventListener('pointerdown',startMusicOnFirstInteraction,true);
   document.removeEventListener('touchstart',startMusicOnFirstInteraction,true);
+  document.removeEventListener('click',startMusicOnFirstInteraction,true);
 };
 document.addEventListener('pointerdown',startMusicOnFirstInteraction,true);
 document.addEventListener('touchstart',startMusicOnFirstInteraction,true);
+document.addEventListener('click',startMusicOnFirstInteraction,true);
 
 
 const chapters=[
@@ -694,12 +737,12 @@ function applyMobileSceneOffsets(){
  if(chapterGroups[3])chapterGroups[3].position.x-=.35;
  // Heart Garden: move the complete tree downward so all hanging hearts
  // stay below the text and inside a tall phone screen.
- if(chapterGroups[6]){chapterGroups[6].position.x-=.30;chapterGroups[6].position.y-=.78;}
+ if(chapterGroups[6]){chapterGroups[6].position.x-=.30;chapterGroups[6].position.y-=1.55;}
  // Question arches: center arch and island together.
  if(chapterGroups[7])chapterGroups[7].position.x+=.05;
  if(chapterGroups[8])chapterGroups[8].position.x+=.05;
  // Thank-you tree: same downward correction as the Heart Garden.
- if(chapterGroups[9]){chapterGroups[9].position.x-=.25;chapterGroups[9].position.y-=.78;}
+ if(chapterGroups[9]){chapterGroups[9].position.x-=.25;chapterGroups[9].position.y-=1.55;}
  // Finale: balance moon on left and large heart on right.
  if(chapterGroups[11])chapterGroups[11].position.x+=.20;
 }
@@ -1110,14 +1153,15 @@ function syncViewport(){
  VIEW=getViewport();
  if(backBtn){
    if(VIEW.w<760){
-     // On phones keep Back on the opposite/right side so it never covers
-     // the chapter heading on the left.
+     // Mobile: keep Back away from headings and modal close buttons.
      backBtn.style.left='auto';
-     backBtn.style.right='22px';
-     backBtn.style.top='112px';
-     backBtn.style.padding='8px 12px';
+     backBtn.style.right='18px';
+     backBtn.style.top='auto';
+     backBtn.style.bottom='26px';
+     backBtn.style.padding='9px 14px';
      backBtn.style.fontSize='12px';
    }else{
+     backBtn.style.bottom='auto';
      backBtn.style.right='auto';
      backBtn.style.left='22px';
      backBtn.style.top='66px';
