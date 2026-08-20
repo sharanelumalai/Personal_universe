@@ -19,7 +19,7 @@ const MOBILE_GPU_MODE = VIEW.w < 760 || /Android|iPhone|iPad|iPod/i.test(navigat
 
 const canvas=document.querySelector('#world');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
-renderer.setPixelRatio(Math.min(devicePixelRatio,getViewport().w<760?1.50:1.55)); renderer.setSize(VIEW.w,VIEW.h); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=.84; renderer.shadowMap.enabled=!MOBILE_GPU_MODE; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.setPixelRatio(Math.min(devicePixelRatio,getViewport().w<760?1.25:1.55)); renderer.setSize(VIEW.w,VIEW.h); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=.84; renderer.shadowMap.enabled=!MOBILE_GPU_MODE; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene(); scene.background=new THREE.Color(0x050416); scene.fog=new THREE.FogExp2(0x070513,.0095);
 const camera=new THREE.PerspectiveCamera(48,VIEW.w/VIEW.h,.1,500); camera.position.set(0,3.8,14.2);
 const composer=new EffectComposer(renderer); composer.addPass(new RenderPass(scene,camera)); const bloomPass=new UnrealBloomPass(new THREE.Vector2(VIEW.w,VIEW.h),.42,.62,.90); composer.addPass(bloomPass); composer.addPass(new OutputPass());
@@ -34,27 +34,28 @@ const copy=document.querySelector('#copy'),titleEl=document.querySelector('#titl
 const flash=document.querySelector('#flash'), heartLabel=document.createElement('div');
 const realTalkCards=document.querySelector('#realTalkCards'), compatibilityPanel=document.querySelector('#compatibilityPanel'); heartLabel.className='heart-label'; document.body.appendChild(heartLabel);
 
-// Global Back button: visible on every chapter except the first.
+// Back button: available on every chapter except the first.
+// It is injected here so you do not need to edit index.html or style.css.
 const backBtn=document.createElement('button');
-backBtn.id='backBtn';
 backBtn.type='button';
+backBtn.id='backBtn';
 backBtn.textContent='← Back';
 Object.assign(backBtn.style,{
- position:'fixed',
- left:'22px',
- top:'66px',
- zIndex:'10020',
- padding:'9px 14px',
- border:'1px solid rgba(255,170,215,.30)',
- borderRadius:'999px',
- background:'rgba(11,7,31,.72)',
- color:'#fff4fb',
- font:'600 13px system-ui, sans-serif',
- backdropFilter:'blur(10px)',
- WebkitBackdropFilter:'blur(10px)',
- boxShadow:'0 0 18px rgba(255,79,155,.12)',
- cursor:'pointer',
- display:'none'
+  position:'fixed',
+  left:'22px',
+  top:'66px',
+  zIndex:'10020',
+  padding:'9px 14px',
+  border:'1px solid rgba(255,170,215,.28)',
+  borderRadius:'999px',
+  background:'rgba(11,7,31,.72)',
+  color:'#fff4fb',
+  font:'600 13px system-ui, sans-serif',
+  backdropFilter:'blur(10px)',
+  WebkitBackdropFilter:'blur(10px)',
+  boxShadow:'0 0 16px rgba(255,79,155,.12)',
+  cursor:'pointer',
+  display:'none'
 });
 document.body.appendChild(backBtn);
 
@@ -99,15 +100,15 @@ document.querySelector('#soundBtn').onclick=()=>{
 setTimeout(()=>ensureBackgroundMusic(),250);
 
 const startMusicOnFirstInteraction=()=>{
-  unlockAudio();
-  if(!musicOn)ensureBackgroundMusic();
+  if(!musicOn){
+    unlockAudio();
+    ensureBackgroundMusic();
+  }
   document.removeEventListener('pointerdown',startMusicOnFirstInteraction,true);
   document.removeEventListener('touchstart',startMusicOnFirstInteraction,true);
-  document.removeEventListener('click',startMusicOnFirstInteraction,true);
 };
 document.addEventListener('pointerdown',startMusicOnFirstInteraction,true);
 document.addEventListener('touchstart',startMusicOnFirstInteraction,true);
-document.addEventListener('click',startMusicOnFirstInteraction,true);
 
 
 const chapters=[
@@ -303,46 +304,6 @@ function makePolaroid(i){
  const frameGlow=glowLight(fr,0xff9d6f,.65,3.0);frameGlow.position.set(0,.05,.35);
  const glowPhase=i*.9;
  animations.push(t=>{frameGlow.intensity=.58+Math.sin(t*1.15+glowPhase)*.12;});const loader=new THREE.TextureLoader();const pm=new THREE.MeshBasicMaterial({color:i%2?0x6f4063:0x34546c});const memoryUrl=(window.MEMORY_IMAGES&&window.MEMORY_IMAGES[i])||new URL(`memories/memory-${i+1}.svg`,document.baseURI).href;loader.load(memoryUrl,tex=>{tex.colorSpace=THREE.SRGBColorSpace;pm.map=tex;pm.color.set(0xffffff);pm.needsUpdate=true;},undefined,()=>{});addMesh(fr,new THREE.PlaneGeometry(1.16,1.12),pm,[0,.18,.067]);addMesh(fr,new THREE.BoxGeometry(.8,.035,.03),mat(0xd7a9ba),[0,-.61,.075]);return fr;}
-
-function makeRobotLedTexture(){
- const canvas=document.createElement('canvas');
- canvas.width=1024;canvas.height=384;
- const ctx=canvas.getContext('2d');
- const texture=new THREE.CanvasTexture(canvas);
- texture.colorSpace=THREE.SRGBColorSpace;
-
- function draw(){
-   const label=window.COUPLE_LED_NAME || 'Our Name ❤️';
-   ctx.clearRect(0,0,canvas.width,canvas.height);
-
-   const grad=ctx.createLinearGradient(0,0,canvas.width,0);
-   grad.addColorStop(0,'#091f37');
-   grad.addColorStop(.5,'#123d55');
-   grad.addColorStop(1,'#091f37');
-   ctx.fillStyle=grad;
-   ctx.fillRect(0,0,canvas.width,canvas.height);
-
-   // LED scan lines
-   ctx.globalAlpha=.12;
-   ctx.fillStyle='#d7f6ff';
-   for(let y=8;y<canvas.height;y+=18)ctx.fillRect(0,y,canvas.width,2);
-   ctx.globalAlpha=1;
-
-   ctx.textAlign='center';
-   ctx.textBaseline='middle';
-   ctx.font='700 92px Arial, sans-serif';
-   ctx.shadowColor='#ff5aa9';
-   ctx.shadowBlur=28;
-   ctx.fillStyle='#ffd7ee';
-   ctx.fillText(label,canvas.width/2,canvas.height/2);
-   ctx.shadowBlur=0;
-
-   texture.needsUpdate=true;
- }
- draw();
- return {texture,draw};
-}
-
 function makeLoveMachine(){
  const r=new THREE.Group();
  // Retro love-bot inspired by the approved reference: rounded head, real body, limbs and animated controls.
@@ -356,13 +317,60 @@ function makeLoveMachine(){
  addMesh(head,new THREE.BoxGeometry(2.75,2.15,1.35),shell,[0,0,0]);
  for(const x of [-1.25,1.25])for(const y of [-.86,.86])sphere(head,.30,edge,[x,y,.02],[1.05,1.05,1.0]);
  for(const sx of [-1,1]){sphere(head,.43,edge,[sx*1.56,0,0],[.78,1.02,.78]);sphere(head,.23,joint,[sx*1.63,0,.03],[.75,1,.75]);}
- // screen bezel and LED couple-name display
+ // screen bezel and LED name display
  addMesh(head,new THREE.BoxGeometry(2.18,1.43,.17),mat(0x171528,0x171528,.08,.30,.15),[0,.02,.76]);
- const led=makeRobotLedTexture();
- const screenMat=new THREE.MeshBasicMaterial({map:led.texture,toneMapped:false});
+
+ // Change this from config.js if needed:
+ // window.ROBOT_LED_NAME = "Her Name ❤️";
+ const ledCanvas=document.createElement('canvas');
+ ledCanvas.width=1024;
+ ledCanvas.height=512;
+ const ledCtx=ledCanvas.getContext('2d');
+
+ function drawRobotLed(){
+   const rawName=(window.ROBOT_LED_NAME||window.HER_NAME||'Name').toString().trim();
+   const label=rawName.includes('❤️')||rawName.includes('♥') ? rawName : rawName+' ❤️';
+
+   ledCtx.clearRect(0,0,ledCanvas.width,ledCanvas.height);
+
+   const bg=ledCtx.createLinearGradient(0,0,ledCanvas.width,ledCanvas.height);
+   bg.addColorStop(0,'#071729');
+   bg.addColorStop(.5,'#12384b');
+   bg.addColorStop(1,'#071729');
+   ledCtx.fillStyle=bg;
+   ledCtx.fillRect(0,0,ledCanvas.width,ledCanvas.height);
+
+   // Subtle LED scan lines.
+   ledCtx.globalAlpha=.12;
+   ledCtx.fillStyle='#bcecff';
+   for(let y=12;y<ledCanvas.height;y+=24)ledCtx.fillRect(0,y,ledCanvas.width,2);
+   ledCtx.globalAlpha=1;
+
+   // Soft pink LED glow.
+   ledCtx.textAlign='center';
+   ledCtx.textBaseline='middle';
+   ledCtx.font='700 105px Arial, sans-serif';
+   ledCtx.shadowColor='#ff4f9d';
+   ledCtx.shadowBlur=34;
+   ledCtx.fillStyle='#ffe6f4';
+   ledCtx.fillText(label,ledCanvas.width/2,ledCanvas.height/2);
+   ledCtx.shadowBlur=0;
+ }
+
+ drawRobotLed();
+ const ledTexture=new THREE.CanvasTexture(ledCanvas);
+ ledTexture.colorSpace=THREE.SRGBColorSpace;
+
+ const screenMat=new THREE.MeshBasicMaterial({
+   map:ledTexture,
+   toneMapped:false
+ });
  const screen=addMesh(head,new THREE.PlaneGeometry(1.82,1.10),screenMat,[0,.02,.87]);
- // Soft LED glow around the screen rather than the previous oversized heart.
- const screenGlow=glowLight(head,0xff5aa9,.85,3.4);screenGlow.position.set(0,.02,1.02);
+
+ // Gentle glow around the LED display.
+ const screenGlow=glowLight(head,0xff5b9f,.72,3.2);
+ screenGlow.position.set(0,.02,1.04);
+
  const glint=sphere(head,.06,mat(0xffe8ba,0xffc96d,1.4),[-.72,.35,.94]);
  // antenna
  addMesh(head,new THREE.CylinderGeometry(.045,.055,.76,10),metal,[0,1.36,0],[0,0,-.18]);
@@ -412,8 +420,6 @@ function makeLoveMachine(){
    arms[1].shoulder.rotation.z=-.10-Math.sin(t*.9+.6)*.09;
    arms[0].elbow.rotation.z=-.08+Math.sin(t*1.1)*.05;
    arms[1].elbow.rotation.z=.08-Math.sin(t*1.1+.4)*.05;
-   heart.scale.setScalar(.94+.10*Math.sin(t*2.2));
-   heart.rotation.z=Math.sin(t*1.4)*.04;
    antenna.scale.setScalar(.92+.18*(.5+.5*Math.sin(t*3.5)));
    glint.material.emissiveIntensity=.7+.55*(.5+.5*Math.sin(t*2.8));
    screen.material.color.setHSL(.59+Math.sin(t*.2)*.015,.48,.16+.015*Math.sin(t*.8));
@@ -704,25 +710,7 @@ function showCopy(){applyMobileLightBudget();const c=chapters[current];copy.clas
  realTalkCards.classList.toggle('hidden',current!==4);
  compatibilityPanel.classList.toggle('hidden',current!==5);
  if(current!==7 && current!==8)fbPanel?.classList.add('hidden');
- setTimeout(()=>{
-   eyeEl.textContent=`${c.n}. ${c.e}`;
-   titleEl.textContent=c.t;
-   subEl.textContent=c.s;
-   chapterEl.textContent=c.n;
-   actions.innerHTML='';
-   const b=document.createElement('button');
-   b.className='action';
-   b.textContent=c.b;
-   b.onclick=()=>{
-     unlockAudio();
-     // Mobile browsers prohibit audible autoplay before a user gesture.
-     // This makes the first story-button tap start music automatically.
-     if(!musicOn)ensureBackgroundMusic();
-     c.a();
-   };
-   actions.appendChild(b);
-   copy.classList.remove('out');
- },280);
+ setTimeout(()=>{eyeEl.textContent=`${c.n}. ${c.e}`;titleEl.textContent=c.t;subEl.textContent=c.s;chapterEl.textContent=c.n;actions.innerHTML='';const b=document.createElement('button');b.className='action';b.textContent=c.b;b.onclick=()=>{unlockAudio();c.a()};actions.appendChild(b);copy.classList.remove('out');},280);
 }
 function magicBurst(x=getViewport().w/2,y=getViewport().h/2){flash.animate([{opacity:0},{opacity:.18,offset:.32},{opacity:.08,offset:.62},{opacity:0}],{duration:1250,easing:'cubic-bezier(.22,.61,.36,1)'});for(let i=0;i<40;i++){const p=document.createElement('span');p.className='petal';p.textContent=i%3?'✦':'♥';p.style.left=x+'px';p.style.top=y+'px';p.style.setProperty('--dx',`${(Math.random()-.5)*320}px`);p.style.setProperty('--dy',`${(Math.random()-.5)*260}px`);p.style.color=i%2?'#ff83bd':'#b98aff';document.querySelector('#petalLayer').appendChild(p);setTimeout(()=>p.remove(),1550);}play('magic.mp3');}
 const cameraZ=[14.2,13.2,13.4,11.8,12.7,12.2,12.8,13.6,13.6,12.5,13.2,14.0];
@@ -781,19 +769,21 @@ function tweenCamera(toIndex,dur=2750){
  }
  requestAnimationFrame(step);
 }
-function resetCatchSceneForReplay(){
+function resetCatchForBackNavigation(){
  if(!catchHeart||!girlCatch)return;
  catchHeart.visible=true;
  heartCatchMode=false;
  catchHeart.position.set(2.25,2.45,0);
  catchHeart.scale.setScalar(1);
  catchHeart.rotation.set(0,0,0);
- if(catchHeart.userData.catchGlow){
-   catchHeart.userData.catchGlow.visible=true;
-   catchHeart.userData.catchGlow.intensity=catchHeart.userData.baseGlow||4.2;
-   catchHeart.userData.catchGlow.distance=10;
- }
  catchHeart.material.emissiveIntensity=.85;
+ const glow=catchHeart.userData.catchGlow;
+ if(glow){
+   glow.visible=true;
+   glow.intensity=catchHeart.userData.baseGlow||4.2;
+   glow.distance=10;
+ }
+ // Return the girl's arms to the normal reaching/idle pose.
  if(girlCatch.userData.armRP)girlCatch.userData.armRP.rotation.z=-1.08;
  if(girlCatch.userData.elbowR)girlCatch.userData.elbowR.rotation.z=-.28;
  if(girlCatch.userData.armLP)girlCatch.userData.armLP.rotation.z=0;
@@ -801,16 +791,20 @@ function resetCatchSceneForReplay(){
 }
 
 function goBack(){
- if(transitioning||current<=0)return;
+ if(transitioning || current<=0)return;
+
  const target=current-1;
- if(target===2)resetCatchSceneForReplay();
+
+ // If returning to Catch My Heart after it was already completed,
+ // restore the heart so the scene is usable again.
+ if(target===2)resetCatchForBackNavigation();
+
  current=target;
  tweenCamera(current);
 }
 
 backBtn.onclick=()=>{
  unlockAudio();
- if(!musicOn)ensureBackgroundMusic();
  goBack();
 };
 
@@ -1114,6 +1108,23 @@ showCopy();animate();
 
 function syncViewport(){
  VIEW=getViewport();
+ if(backBtn){
+   if(VIEW.w<760){
+     // On phones keep Back on the opposite/right side so it never covers
+     // the chapter heading on the left.
+     backBtn.style.left='auto';
+     backBtn.style.right='22px';
+     backBtn.style.top='112px';
+     backBtn.style.padding='8px 12px';
+     backBtn.style.fontSize='12px';
+   }else{
+     backBtn.style.right='auto';
+     backBtn.style.left='22px';
+     backBtn.style.top='66px';
+     backBtn.style.padding='9px 14px';
+     backBtn.style.fontSize='13px';
+   }
+ }
  applyMobileSceneOffsets();
  applyMobileLightBudget();
  camera.aspect=VIEW.w/VIEW.h;
