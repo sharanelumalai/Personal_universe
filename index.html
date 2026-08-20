@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Our Little Universe ❤️</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Sacramento&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="world"></canvas>
+  <div id="vignette"></div>
+  <div id="flash"></div>
+  <div id="petalLayer"></div>
+
+  <button id="soundBtn">♫ Sound</button>
+  <div id="progress"><span id="chapter">01</span><span>/12</span></div>
+
+  <div id="copy">
+    <div class="eyebrow" id="eyebrow"></div>
+    <h1 id="title"></h1>
+    <p id="subtitle"></p>
+    <div id="actions"></div>
+  </div>
+
+  <section id="realTalkCards" class="scene-card-row hidden" aria-label="real talk messages">
+    <article>Thank you for being in my life. ♥</article>
+    <article>You mean more to me than words can say.</article>
+    <article>I may not be perfect, but I’ll always try for you.</article>
+    <article>I don’t know what the future holds, but I know I want you in it.</article>
+  </section>
+
+  <section id="compatibilityPanel" class="compatibility-panel hidden" aria-label="relationship compatibility results">
+    <div class="machine-title">Relationship Compatibility Test</div>
+    <div class="metric"><div class="metric-row"><span>Cuteness</span><strong>0% ❤️</strong></div><div class="metric-track"><i class="metric-fill"></i></div></div>
+    <div class="metric"><div class="metric-row"><span>Anger Level</span><strong>0% 😅</strong></div><div class="metric-track"><i class="metric-fill"></i></div></div>
+    <div class="metric"><div class="metric-row"><span>Care Level</span><strong>0% ❤️</strong></div><div class="metric-track"><i class="metric-fill"></i></div></div>
+    <div class="metric"><div class="metric-row"><span>Food Stealing</span><strong>0% 🍪</strong></div><div class="metric-track"><i class="metric-fill"></i></div></div>
+    <div class="metric"><div class="metric-row"><span>My Happiness</span><strong>0% 😍</strong></div><div class="metric-track"><i class="metric-fill"></i></div></div>
+    <div class="compat-result pending">Result: <em>You are perfect for me! ❤️</em></div>
+  </section>
+
+  <div id="memoryPanel" class="panel memory-panel hidden">
+    <button class="close">×</button>
+    <img id="memoryImg">
+    <h3 id="memoryTitle"></h3>
+    <p id="memoryText"></p>
+  </div>
+
+  <aside id="feedbackPanel" class="feedback-dock hidden">
+    <button class="close">×</button>
+    <div class="feedback-head">
+      <span>♥</span>
+      <div>
+        <h2>Your thoughts about me</h2>
+        <p>Be completely honest. I want to understand you better.</p>
+      </div>
+    </div>
+    <div id="feedbackFields"></div>
+    <button id="submitFeedback" class="primary">Send my answers ♥</button>
+    <div id="feedbackStatus"></div>
+  </aside>
+
+  <div id="hint">Drag to look • Tap glowing objects • Use the story buttons to continue</div>
+</div>
+<script src="/src/config.js"></script>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

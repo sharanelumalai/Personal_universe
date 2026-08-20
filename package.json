@@ -1,0 +1,17 @@
+{
+  "name": "love-universe-legendary-v7",
+  "private": true,
+  "version": "7.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "three": "^0.179.1"
+  },
+  "devDependencies": {
+    "vite": "^7.1.2"
+  }
+}

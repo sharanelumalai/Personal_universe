@@ -1,0 +1,220 @@
+*{box-sizing:border-box}html,body,#app{width:100%;height:100%;margin:0;overflow:hidden;background:#030312;color:white;font-family:Nunito,sans-serif}canvas{position:fixed;inset:0;width:100%;height:100%;display:block}#vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 58% 46%,transparent 28%,rgba(2,2,16,.24) 66%,rgba(0,0,8,.88) 100%)}#flash{position:fixed;inset:0;background:radial-gradient(circle,#ffe4f0,rgba(181,116,255,.34),transparent 68%);opacity:0;pointer-events:none;mix-blend-mode:screen}#soundBtn,#progress{position:fixed;top:22px;z-index:30;border:1px solid rgba(255,255,255,.2);background:rgba(15,8,38,.5);backdrop-filter:blur(14px);color:#fff;border-radius:99px;padding:10px 15px;font-size:14px;font-weight:800}#soundBtn{left:22px;cursor:pointer}#progress{right:22px}#chapter{color:#ff87bd;margin-right:5px}.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:13px;font-weight:800;color:#ff93c7;margin-bottom:9px}#copy{position:fixed;z-index:16;left:6vw;top:49%;transform:translateY(-50%);width:min(540px,38vw);transition:opacity .45s,transform .7s;filter:drop-shadow(0 10px 35px rgba(0,0,0,.58))}#copy.out{opacity:0;transform:translateY(-42%) scale(.97)}h1{font-family:Sacramento,cursive;font-weight:400;font-size:clamp(56px,5vw,78px);line-height:.92;margin:0 0 14px;text-shadow:0 0 28px rgba(255,106,178,.32)}#subtitle{font-size:clamp(16px,1.2vw,19px);line-height:1.5;max-width:470px;color:#f5eaff;margin:0}#actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}button.primary,.action{border:0;border-radius:999px;padding:13px 23px;min-height:48px;font-size:15px;background:linear-gradient(135deg,#ff5a9f,#d566ff);box-shadow:0 8px 34px rgba(255,66,156,.36),inset 0 1px rgba(255,255,255,.42);color:white;font-weight:800;cursor:pointer;transition:.25s transform,.25s box-shadow,.25s filter}.action:hover,button.primary:hover{transform:translateY(-3px) scale(1.025);filter:brightness(1.08);box-shadow:0 12px 44px rgba(255,66,156,.52)}#hint{position:fixed;bottom:17px;left:50%;transform:translateX(-50%);font-size:12px;color:#cfc1db;z-index:14;background:rgba(7,4,22,.48);padding:8px 13px;border-radius:99px;backdrop-filter:blur(10px)}.hidden{display:none!important}.panel{position:fixed;z-index:40;top:50%;left:72%;transform:translate(-50%,-50%);width:min(520px,39vw);max-height:80vh;overflow:auto;border-radius:26px;padding:24px;background:rgba(9,5,27,.91);border:1px solid rgba(255,166,217,.3);box-shadow:0 34px 100px #000,0 0 70px rgba(255,74,169,.18);backdrop-filter:blur(20px)}.close{position:sticky;float:right;top:0;border:0;background:#25143f;color:#fff;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:20px;z-index:2}.panel h3{font-size:27px;margin:16px 0 8px}.panel p{font-size:15px;line-height:1.55}.panel img{width:100%;border-radius:18px;max-height:48vh;object-fit:cover}.heart-label{position:fixed;z-index:21;pointer-events:none;padding:8px 12px;background:rgba(10,5,30,.78);border:1px solid rgba(255,160,213,.42);border-radius:99px;font-size:13px;opacity:0;transition:opacity .2s;box-shadow:0 0 20px rgba(255,90,160,.22)}#petalLayer{position:fixed;inset:0;pointer-events:none;z-index:13}.petal{position:absolute;font-size:15px;animation:petal 1.1s ease-out forwards}@keyframes petal{0%{opacity:1;transform:translate(0,0) scale(.5) rotate(0)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.4) rotate(180deg)}}
+.scene-card-row{position:fixed;z-index:15;left:27vw;right:5vw;bottom:8vh;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;pointer-events:none}.scene-card-row article{min-height:108px;display:grid;place-items:center;text-align:center;padding:18px 14px;border:1px solid rgba(255,100,176,.42);border-radius:15px;background:linear-gradient(180deg,rgba(27,12,53,.75),rgba(11,6,31,.64));box-shadow:0 10px 28px rgba(0,0,0,.34),inset 0 0 25px rgba(255,76,154,.06);backdrop-filter:blur(7px);font-size:14px;line-height:1.45;color:#fff1f8}
+.compatibility-panel{position:fixed;z-index:15;right:6vw;top:50%;transform:translateY(-50%);width:min(380px,31vw);padding:22px 24px;border-radius:24px;border:1px solid rgba(255,145,204,.35);background:linear-gradient(160deg,rgba(22,14,49,.88),rgba(8,6,28,.78));box-shadow:0 24px 70px rgba(0,0,0,.45),0 0 45px rgba(255,72,164,.12);backdrop-filter:blur(13px)}.machine-title{font-size:16px;font-weight:900;color:#ffd5e9;margin-bottom:12px}.metric{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:15px}.metric strong{font-weight:800;color:#fff}.compat-result{padding-top:16px;color:#ff85bc;font-weight:800}.compat-result em{display:block;margin-top:6px;color:#fff;font-family:Sacramento,cursive;font-size:34px;font-style:normal;line-height:1}
+.feedback-dock{position:fixed;z-index:35;right:3.5vw;top:50%;transform:translateY(-50%);width:min(520px,41vw);max-height:82vh;overflow:auto;border-radius:24px;padding:20px 22px;background:linear-gradient(180deg,rgba(24,13,54,.9),rgba(10,7,31,.9));border:1px solid rgba(255,133,191,.3);box-shadow:0 30px 100px rgba(0,0,0,.5),0 0 48px rgba(222,72,165,.13);backdrop-filter:blur(16px)}.feedback-head{display:flex;gap:12px;align-items:flex-start;padding-right:40px}.feedback-head>span{color:#ff74b4;font-size:26px;filter:drop-shadow(0 0 10px #ff4f9c)}.feedback-head h2{font-size:23px;margin:0 0 4px}.feedback-head p{font-size:13px;color:#d8c7e5;margin:0}.feedback-dock label{display:block;font-size:13px;font-weight:800;margin:15px 0 6px;color:#fff1f8}.feedback-dock textarea,.feedback-dock select{width:100%;background:rgba(15,9,38,.9);border:1px solid rgba(180,112,220,.28);color:#fff;border-radius:11px;padding:10px 11px;font:inherit;font-size:13px;outline:none}.feedback-dock textarea:focus,.feedback-dock select:focus{border-color:#ff6eaf;box-shadow:0 0 0 2px rgba(255,110,175,.1)}.feedback-dock textarea{min-height:72px;resize:vertical}.feedback-dock .primary{margin-top:17px;width:100%}#feedbackStatus{margin-top:10px;color:#f5a9ce;font-size:13px}
+body.scene-4 #copy{top:35%;width:min(500px,35vw)}body.scene-5 #copy{top:33%;width:min(460px,34vw)}body.scene-5 .compatibility-panel{display:block}body.scene-6 #copy{top:32%;width:min(470px,35vw)}body.scene-6 .scene-card-row{display:grid}body.scene-7 #copy{top:35%}body.scene-8 #copy,body.scene-9 #copy{top:31%;width:min(430px,31vw)}body.scene-10 #copy{top:31%}
+@media(max-width:1000px){#copy{left:5vw;width:min(500px,44vw)}.compatibility-panel{width:34vw;right:3vw}.scene-card-row{left:31vw;right:3vw}.panel{left:70%;width:46vw}.feedback-dock{width:46vw;right:2vw}}
+@media(max-width:760px){#copy{left:6vw;right:6vw;bottom:6vh;top:auto!important;width:auto!important;transform:none;max-width:none;padding-right:0}#copy.out{transform:translateY(30px)}h1{font-size:47px}#subtitle{font-size:14px;line-height:1.45}#hint{display:none}#soundBtn{top:12px;left:12px}#progress{top:12px;right:12px}.eyebrow{font-size:11px}.action{padding:12px 18px;min-height:44px}.compatibility-panel,.feedback-dock,.panel{left:5vw;right:5vw;top:10vh;bottom:auto;transform:none;width:auto;max-height:62vh}.scene-card-row{left:5vw;right:5vw;bottom:27vh;grid-template-columns:1fr 1fr;gap:8px}.scene-card-row article{min-height:74px;padding:11px;font-size:12px}.compatibility-panel{top:18vh}.metric{font-size:13px;padding:7px 0}}
+
+/* V6 preview-match composition pass */
+body.scene-1 #copy{left:7vw;top:47%;width:min(535px,38vw)}
+body.scene-2 #copy{left:50%;top:12%;transform:translateX(-50%);width:min(610px,60vw);text-align:center}body.scene-2 #actions{justify-content:center}
+body.scene-3 #copy{left:auto;right:7vw;top:28%;width:min(490px,34vw);text-align:left}
+body.scene-4 #copy{left:50%;top:10%;transform:translateX(-50%);width:min(680px,68vw);text-align:center}body.scene-4 #actions{justify-content:center}
+body.scene-5 #copy{left:50%;top:9%;transform:translateX(-50%);width:min(720px,70vw);text-align:center}body.scene-5 #actions{justify-content:center}
+body.scene-6 #copy{left:5vw;top:12%;transform:none;width:min(500px,35vw)}body.scene-6 .compatibility-panel{left:5vw;right:auto;top:38%;transform:none;width:min(390px,31vw)}
+body.scene-7 #copy{left:50%;top:9%;transform:translateX(-50%);width:min(760px,72vw);text-align:center}body.scene-7 #actions{justify-content:center}
+body.scene-8 #copy,body.scene-9 #copy{left:5vw;top:13%;transform:none;width:min(420px,30vw)}
+body.scene-10 #copy{left:50%;top:9%;transform:translateX(-50%);width:min(720px,68vw);text-align:center}body.scene-10 #actions{justify-content:center}
+body.scene-11 #copy{left:50%;top:11%;transform:translateX(-50%);width:min(700px,65vw);text-align:center}body.scene-11 #actions{justify-content:center}
+body.scene-12 #copy{left:50%;top:50%;transform:translate(-50%,-50%);width:min(720px,75vw);text-align:center}body.scene-12 #actions{justify-content:center}
+body.scene-12 h1{font-size:clamp(74px,8vw,122px);text-shadow:0 0 22px #ff7bb8,0 0 54px rgba(255,62,154,.65)}
+body.scene-2 #copy.out,body.scene-4 #copy.out,body.scene-5 #copy.out,body.scene-7 #copy.out,body.scene-10 #copy.out,body.scene-11 #copy.out{transform:translateX(-50%) translateY(-20px) scale(.97)}
+body.scene-12 #copy.out{transform:translate(-50%,-46%) scale(.97)}
+.compatibility-panel{border-color:rgba(255,155,208,.48);background:linear-gradient(155deg,rgba(17,11,43,.94),rgba(9,6,29,.88));box-shadow:0 25px 80px rgba(0,0,0,.55),0 0 55px rgba(255,81,164,.2)}
+.machine-title{font-size:18px}.metric{font-size:16px;padding:11px 0}.compat-result em{font-size:39px;color:#fff4fb}
+.scene-card-row{left:25vw;right:5vw;bottom:7vh}.scene-card-row article{background:linear-gradient(180deg,rgba(35,18,68,.82),rgba(13,8,38,.72));border-color:rgba(255,113,184,.56);box-shadow:0 12px 34px rgba(0,0,0,.45),0 0 24px rgba(255,72,156,.08)}
+.feedback-dock{right:3vw;width:min(560px,43vw);background:linear-gradient(180deg,rgba(31,17,65,.94),rgba(11,7,33,.94));border-color:rgba(255,135,196,.42)}
+@media(max-width:760px){body.scene-2 #copy,body.scene-4 #copy,body.scene-5 #copy,body.scene-7 #copy,body.scene-10 #copy,body.scene-11 #copy,body.scene-12 #copy{left:6vw;right:6vw;top:auto;bottom:6vh;transform:none;text-align:left;width:auto}body.scene-2 #actions,body.scene-4 #actions,body.scene-5 #actions,body.scene-7 #actions,body.scene-10 #actions,body.scene-11 #actions,body.scene-12 #actions{justify-content:flex-start}body.scene-6 .compatibility-panel{left:5vw;right:5vw;top:17vh;transform:none;width:auto}body.scene-12 h1{font-size:64px}}
+
+/* V7 FINAL visual correction: darker cinematic grade + strict reference composition */
+html,body,#app{background:#02020a}
+#vignette{background:radial-gradient(circle at 55% 42%,transparent 24%,rgba(2,2,12,.18) 58%,rgba(0,0,5,.78) 100%)}
+#flash{background:radial-gradient(circle,rgba(255,225,239,.58),rgba(128,86,170,.16),transparent 66%)}
+#copy{filter:drop-shadow(0 8px 24px rgba(0,0,0,.72))}
+h1{font-size:clamp(50px,4.5vw,70px);text-shadow:0 0 18px rgba(255,116,174,.18)}
+#subtitle{color:#eadfeb;text-shadow:0 2px 10px #000}
+button.primary,.action{background:linear-gradient(135deg,#d84f8b,#a957c2);box-shadow:0 8px 24px rgba(176,55,118,.28),inset 0 1px rgba(255,255,255,.26)}
+.action:hover,button.primary:hover{filter:brightness(1.03);box-shadow:0 10px 28px rgba(191,63,127,.34)}
+.compatibility-panel{left:31vw!important;right:auto!important;top:31%!important;transform:none!important;width:min(370px,29vw)!important;padding:20px 22px;background:linear-gradient(165deg,rgba(18,11,42,.94),rgba(7,5,24,.92));border-color:rgba(217,105,163,.34);box-shadow:0 20px 60px rgba(0,0,0,.56)}
+body.scene-6 #copy{left:8vw;top:9%;width:min(520px,38vw)}
+body.scene-6 .compatibility-panel{left:29vw!important;top:27%!important}
+.machine-title{font-size:18px;color:#f5ddea}.metric{padding:9px 0;font-size:15px}.compat-result{color:#e472aa}.compat-result em{font-size:36px}
+/* Memory Lane: top centered copy and central runway, like reference */
+body.scene-4 #copy{left:50%;top:8%;transform:translateX(-50%);width:min(650px,64vw);text-align:center}
+body.scene-4 #actions{justify-content:center}
+/* Real Talk: centered title, message cards across bottom */
+body.scene-5 #copy{left:50%;top:8%;transform:translateX(-50%);width:min(680px,68vw);text-align:center}
+body.scene-5 #actions{justify-content:center}.scene-card-row{left:25vw;right:25vw;bottom:6vh;grid-template-columns:repeat(4,1fr);gap:10px}.scene-card-row article{min-height:96px;padding:14px 12px;background:rgba(15,9,35,.74);border-color:rgba(199,86,143,.42);font-size:13px}
+/* Heart Garden / Thank You: center composition */
+body.scene-7 #copy,body.scene-10 #copy{top:7%}
+/* Questions stay IN-SCENE as side panels, never modal center */
+.feedback-dock{right:2.5vw;top:51%;width:min(545px,42vw);max-height:84vh;background:linear-gradient(180deg,rgba(21,12,48,.95),rgba(8,6,26,.95));border-color:rgba(207,102,160,.35);box-shadow:0 24px 80px rgba(0,0,0,.62)}
+.feedback-dock textarea,.feedback-dock select{background:rgba(12,8,31,.94);border-color:rgba(173,94,152,.25)}
+/* Smaller interface chrome so the fantasy world dominates */
+#soundBtn,#progress{background:rgba(9,6,25,.55);border-color:rgba(255,255,255,.12);font-size:12px;padding:8px 12px}
+#hint{opacity:.68}
+@media(max-width:760px){.compatibility-panel{left:5vw!important;right:5vw!important;top:17vh!important;width:auto!important}.scene-card-row{left:4vw;right:4vw;bottom:29vh;grid-template-columns:1fr 1fr}.feedback-dock{left:4vw;right:4vw;width:auto}}
+
+/* V7 targeted finishing pass */
+.compat-result.pending{opacity:.18;filter:blur(1px)}
+.feedback-dock{scrollbar-width:none;-ms-overflow-style:none;scroll-behavior:smooth;overscroll-behavior:contain}
+.feedback-dock::-webkit-scrollbar{width:0;height:0;display:none}
+#feedbackFields{scroll-behavior:smooth}
+/* keep the scene visible while questions auto-scroll internally */
+body.scene-8 .feedback-dock,body.scene-9 .feedback-dock{overflow-y:auto;overflow-x:hidden}
+/* slightly darker glass so moon/heart bloom stays selective rather than washing the UI */
+.compatibility-panel,.feedback-dock{box-shadow:0 22px 70px rgba(0,0,0,.64),0 0 30px rgba(255,72,164,.08)}
+
+/* V7 Polished-80 finishing pass */
+/* Selective glow: world stays dark, only romantic light sources bloom. */
+#vignette{background:radial-gradient(circle at 52% 42%,transparent 30%,rgba(2,2,12,.17) 62%,rgba(0,0,5,.73) 100%)}
+#flash{mix-blend-mode:screen;opacity:.85}
+.compatibility-panel{overflow:hidden}
+.metric{position:relative;overflow:hidden}
+
+/* A cleaner scene-change feeling without a white flash. */
+#copy{transition:opacity .58s ease,transform .72s cubic-bezier(.22,.8,.22,1),filter .72s ease}
+#copy.out{opacity:0;filter:blur(4px) drop-shadow(0 8px 24px rgba(0,0,0,.72))}
+.action{transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,filter .3s ease}
+.action:active{transform:scale(.96)}
+
+/* Hearts remain easy to see against the blossom canopy. */
+body.scene-7 #copy,body.scene-10 #copy{text-shadow:0 3px 18px rgba(0,0,0,.8)}
+.heart-label{background:rgba(15,7,30,.86);border:1px solid rgba(255,126,189,.45);box-shadow:0 0 22px rgba(255,88,160,.24)}
+
+/* Desktop composition stays roomy, but UI avoids covering the 3D subjects. */
+body.scene-6 .compatibility-panel{max-height:64vh;overflow:hidden}
+
+/* Mobile: responsive scene composition, no desktop-position leftovers. */
+@media(max-width:760px){
+  #copy{left:5vw!important;right:5vw!important;top:auto!important;bottom:4.5vh!important;width:auto!important;max-width:none!important;text-align:left!important;transform:none!important;padding:14px 15px;border-radius:18px;background:linear-gradient(180deg,rgba(8,5,24,.08),rgba(8,5,24,.62));backdrop-filter:blur(4px)}
+  #copy.out{transform:translateY(18px)!important}
+  h1{font-size:clamp(38px,11vw,52px)!important;line-height:.98}
+  #subtitle{font-size:13px;max-width:94%;margin-top:8px}
+  .eyebrow{font-size:10px;letter-spacing:.11em}
+  #actions{justify-content:flex-start!important}
+  .action{font-size:13px;padding:11px 17px;min-height:42px}
+  #soundBtn,#progress{font-size:11px;padding:7px 9px}
+  .compatibility-panel{left:5vw!important;right:5vw!important;top:9vh!important;width:auto!important;max-height:53vh!important;padding:15px 16px!important;border-radius:18px}
+  .machine-title{font-size:15px}.metric{font-size:12px;padding:6px 0}.compat-result em{font-size:26px}
+  .feedback-dock{left:4vw!important;right:4vw!important;top:6vh!important;bottom:5vh!important;transform:none!important;width:auto!important;max-height:none!important;padding:16px 17px;border-radius:20px}
+  .feedback-head h2{font-size:19px}.feedback-head p{font-size:12px}.feedback-dock label{font-size:12px;margin-top:12px}.feedback-dock textarea,.feedback-dock select{font-size:12px;padding:9px}
+  .scene-card-row{left:4vw!important;right:4vw!important;bottom:34vh!important;grid-template-columns:1fr 1fr!important;gap:7px!important}.scene-card-row article{min-height:66px!important;padding:9px!important;font-size:11px!important}
+  body.scene-12 #copy{text-align:center!important;background:transparent;backdrop-filter:none}body.scene-12 #actions{justify-content:center!important}
+}
+@media(max-width:420px){
+  h1{font-size:39px!important}.compatibility-panel{top:7vh!important}.scene-card-row{bottom:36vh!important}.scene-card-row article{font-size:10px!important}
+}
+
+
+/* Disney-romantic FX correction pass */
+.metric{display:block!important;padding:9px 0 10px!important;overflow:hidden}
+.metric-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.metric-track{height:6px;margin-top:7px;border-radius:999px;background:rgba(255,255,255,.055);overflow:hidden;box-shadow:inset 0 1px 4px rgba(0,0,0,.55)}
+.metric-fill{display:block;width:0%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ff4f9a,#ff86bd);box-shadow:0 0 9px rgba(255,88,166,.42);transition:width .08s linear}
+.compatibility-panel{overflow:hidden!important}
+#flash{background:radial-gradient(circle,rgba(255,219,238,.34),rgba(166,94,186,.12),transparent 68%)!important}
+body{--romantic-glow:rgba(255,115,177,.24)}
+.action,button.primary{box-shadow:0 8px 26px rgba(224,65,137,.28),inset 0 1px rgba(255,255,255,.27)}
+@media(max-width:760px){.metric-track{height:5px}.metric{padding:6px 0 7px!important}}
+
+
+/* FINAL POLISH: mobile-safe story framing. Keep the 3D hero area visible instead of covering it. */
+@media (max-width:760px){
+  #copy{left:5vw!important;right:5vw!important;top:4.5vh!important;bottom:auto!important;width:90vw!important;max-width:none!important;transform:none!important;padding:10px 12px 8px!important;border-radius:18px;background:linear-gradient(180deg,rgba(8,6,28,.42),rgba(8,6,28,.10));backdrop-filter:blur(4px);pointer-events:none}
+  #copy #actions,#copy .action{pointer-events:auto}
+  #copy h1,h1{font-size:clamp(30px,9vw,43px)!important;line-height:.98!important;margin:.15em 0 .12em!important;text-wrap:balance}
+  #subtitle{font-size:12px!important;line-height:1.35!important;max-width:88vw!important;margin-bottom:8px!important}
+  .eyebrow{font-size:10px!important;letter-spacing:.10em!important}.action{font-size:12px!important;padding:9px 15px!important;min-height:38px!important}
+  #actions{gap:8px!important}
+  body.scene-6 #copy{top:3.8vh!important;left:4vw!important;right:4vw!important;width:92vw!important}
+  body.scene-6 .compatibility-panel{left:4vw!important;right:4vw!important;top:auto!important;bottom:3.5vh!important;width:auto!important;max-height:38vh!important;transform:none!important;padding:12px 14px!important;border-radius:16px!important}
+  .compatibility-panel .machine-title{font-size:13px!important;margin-bottom:6px!important}.metric{font-size:11px!important;padding:4px 0 6px!important}.metric-track{height:4px!important;margin-top:3px!important}.compat-result{padding-top:7px!important;font-size:11px!important}.compat-result em{font-size:22px!important}
+  .scene-card-row{left:3.5vw!important;right:3.5vw!important;bottom:3.8vh!important;grid-template-columns:1fr 1fr!important;gap:6px!important}.scene-card-row article{min-height:58px!important;padding:8px!important;font-size:10px!important}
+  .feedback-dock{left:3.5vw!important;right:3.5vw!important;top:auto!important;bottom:2.5vh!important;width:auto!important;max-height:48vh!important;transform:none!important;padding:13px 14px!important;border-radius:18px!important}
+  .feedback-head h2{font-size:17px!important}.feedback-head p{font-size:10px!important}.feedback-dock label{font-size:10.5px!important;margin-top:9px!important}.feedback-dock textarea,.feedback-dock select{font-size:11px!important;padding:8px!important}.feedback-dock textarea{min-height:52px!important}
+  #soundBtn,#progress{font-size:10px!important;transform:scale(.90);transform-origin:top}
+  #hint{display:none!important}
+}
+@media (max-width:420px){
+  #copy{top:4vh!important;padding:8px 10px 6px!important}#copy h1,h1{font-size:34px!important}.action{padding:8px 13px!important}.feedback-dock{max-height:50vh!important}.scene-card-row article{font-size:9.5px!important}
+}
+
+/* MOBILE TEXT ALIGNMENT FINAL FIX
+   Keeps story copy away from Sound/Progress controls.
+   Desktop layout is untouched. */
+@media (max-width:760px){
+  /* Default mobile chapters: move copy safely below the top controls. */
+  #copy{
+    top:11vh!important;
+    bottom:auto!important;
+    left:5vw!important;
+    right:5vw!important;
+    width:90vw!important;
+    transform:none!important;
+  }
+
+  /* Reference-style chapters that read better centered on mobile. */
+  body.scene-2 #copy,
+  body.scene-4 #copy,
+  body.scene-5 #copy,
+  body.scene-7 #copy,
+  body.scene-10 #copy,
+  body.scene-11 #copy{
+    top:10vh!important;
+    left:6vw!important;
+    right:6vw!important;
+    width:88vw!important;
+    text-align:center!important;
+    transform:none!important;
+  }
+  body.scene-2 #actions,
+  body.scene-4 #actions,
+  body.scene-5 #actions,
+  body.scene-7 #actions,
+  body.scene-10 #actions,
+  body.scene-11 #actions{
+    justify-content:center!important;
+  }
+
+  /* Funny Moment needs a little room for its result panel below. */
+  body.scene-6 #copy{
+    top:9.5vh!important;
+    left:5vw!important;
+    right:5vw!important;
+    width:90vw!important;
+  }
+
+  /* Final page: exact middle of the phone viewport. */
+  body.scene-12 #copy{
+    top:50%!important;
+    bottom:auto!important;
+    left:50%!important;
+    right:auto!important;
+    width:88vw!important;
+    transform:translate(-50%,-50%)!important;
+    text-align:center!important;
+    padding:14px!important;
+    background:transparent!important;
+    backdrop-filter:none!important;
+  }
+  body.scene-12 #actions{
+    justify-content:center!important;
+  }
+  body.scene-12 #copy.out{
+    transform:translate(-50%,-46%) scale(.97)!important;
+  }
+}
+
+@media (max-width:420px){
+  #copy{top:10.5vh!important}
+  body.scene-2 #copy,
+  body.scene-4 #copy,
+  body.scene-5 #copy,
+  body.scene-7 #copy,
+  body.scene-10 #copy,
+  body.scene-11 #copy{top:9.5vh!important}
+  body.scene-6 #copy{top:9vh!important}
+  body.scene-12 #copy{top:50%!important}
+}
