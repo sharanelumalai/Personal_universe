@@ -17,7 +17,7 @@ let VIEW=getViewport();
 
 const canvas=document.querySelector('#world');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.55)); renderer.setSize(VIEW.w,VIEW.h); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=.84; renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.setPixelRatio(Math.min(devicePixelRatio,getViewport().w<760?1.25:1.55)); renderer.setSize(VIEW.w,VIEW.h); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=.84; renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene(); scene.background=new THREE.Color(0x050416); scene.fog=new THREE.FogExp2(0x070513,.0095);
 const camera=new THREE.PerspectiveCamera(48,VIEW.w/VIEW.h,.1,500); camera.position.set(0,3.8,14.2);
 const composer=new EffectComposer(renderer); composer.addPass(new RenderPass(scene,camera)); const bloomPass=new UnrealBloomPass(new THREE.Vector2(VIEW.w,VIEW.h),.42,.62,.90); composer.addPass(bloomPass); composer.addPass(new OutputPass());
@@ -602,20 +602,34 @@ const cameraZ=[14.2,13.2,13.4,11.8,12.7,12.2,12.8,13.6,13.6,12.5,13.2,14.0];
 // Order: Welcome, Story, Catch, Memory, Real Talk, Funny, Garden, Q1, Q2, Thanks, Forever, Finale.
 const mobileExtraZ=[5.3,5.2,5.1,6.0,5.5,5.6,6.2,6.2,6.2,6.0,5.5,7.2];
 const mobileLookX=[1.15,0.00,-.15,1.05,1.10,-.55,1.55,0.00,0.00,1.45,.55,-.65];
-const mobileLookYOffset=[1.30,1.15,1.05,1.15,1.10,1.15,1.30,1.35,1.35,1.30,1.20,1.25];
+const mobileLookYOffset=[
+ -1.10, // 01 welcome
+ -1.00, // 02 story
+ -.95,  // 03 catch
+ -.85,  // 04 memory
+ -.95,  // 05 real talk
+ -.95,  // 06 funny
+ -.65,  // 07 garden
+ -.90,  // 08 questions
+ -.90,  // 09 more questions
+ -.60,  // 10 thank you
+ -.80,  // 11 forever
+ -.75   // 12 finale
+];
 const mobileCameraX=[.20,0,-.05,.15,.15,-.18,.25,0,0,.20,.10,-.20];
 
 function targetCameraZ(i){
   const {w,h}=getViewport();
   const portrait=w<760,narrow=w<1050;
   const ratio=h/w;
-  const tallExtra=portrait&&ratio>1.95?-.20:0;
+  const tallExtra=0;
   return (cameraZ[i]||13.2)+(portrait?(mobileExtraZ[i]||5.6)+tallExtra:narrow?1.5:0);
 }
 function targetFov(){
-  const {w,h}=getViewport();
-  if(w<760)return h/w>1.95?61:59;
-  return w<1050?52:48;
+ const {w}=getViewport();
+ if(w<430)return 63;
+ if(w<760)return 60;
+ return w<1050?52:48;
 }
 function tweenCamera(toIndex,dur=2750){
  if(transitioning)return;
@@ -916,17 +930,14 @@ function animate(){
  if(!transitioning){
   if(mobile){
    const desiredX=mobileCameraX[current]||0;
-   const tallPhone=vp.h/vp.w>1.95;
    camera.position.x=THREE.MathUtils.lerp(camera.position.x,desiredX,.045);
-   const parY=pointerTarget?-pointerTarget.y*.10:0;
-   camera.position.y=THREE.MathUtils.lerp(camera.position.y,baseY+parY,.05);
-   // Modern real phones are much taller than the 375x667 DevTools preset.
-   // Aim lower only on those tall devices; this is what keeps islands,
-   // characters, trees and moons inside the actual phone viewport.
-   const tallLookCorrection=tallPhone?-1.45:0;
+   const parY=pointerTarget?-pointerTarget.y*.08:0;
+   // Keep the camera slightly ABOVE the scene and deliberately look downward.
+   // This is stable on real phones even when browser chrome changes viewport height.
+   camera.position.y=THREE.MathUtils.lerp(camera.position.y,baseY+1.05+parY,.055);
    camera.lookAt(
      mobileLookX[current]||0,
-     baseY+(mobileLookYOffset[current]||1.2)+tallLookCorrection,
+     baseY+(mobileLookYOffset[current]??-.9),
      -4.2
    );
   }else if(pointerTarget){
@@ -953,5 +964,10 @@ function syncViewport(){
 }
 addEventListener('resize',syncViewport);
 addEventListener('orientationchange',()=>setTimeout(syncViewport,180));
-if(window.visualViewport)window.visualViewport.addEventListener('resize',syncViewport);
+if(window.visualViewport){
+ window.visualViewport.addEventListener('resize',syncViewport);
+ window.visualViewport.addEventListener('scroll',syncViewport);
+}
 syncViewport();
+setTimeout(syncViewport,250);
+setTimeout(syncViewport,900);
