@@ -346,7 +346,7 @@ function makePolaroid(i){
  const frame=addMesh(fr,new THREE.BoxGeometry(1.42,1.72,.12),mat(0xfff0e7,0xff8fbd,.62,.48),[0,0,0]);
  const frameGlow=glowLight(fr,0xff9d6f,.65,3.0);frameGlow.position.set(0,.05,.35);
  const glowPhase=i*.9;
- animations.push(t=>{frameGlow.intensity=.58+Math.sin(t*1.15+glowPhase)*.12;});const loader=new THREE.TextureLoader();const pm=new THREE.MeshBasicMaterial({color:i%2?0x6f4063:0x34546c});const memoryUrl=(window.MEMORY_IMAGES&&window.MEMORY_IMAGES[i])||new URL(`memories/memory-${i+1}.svg`,document.baseURI).href;loader.load(memoryUrl,tex=>{tex.colorSpace=THREE.SRGBColorSpace;pm.map=tex;pm.color.set(0xffffff);pm.needsUpdate=true;},undefined,()=>{});addMesh(fr,new THREE.PlaneGeometry(1.16,1.12),pm,[0,.18,.067]);addMesh(fr,new THREE.BoxGeometry(.8,.035,.03),mat(0xd7a9ba),[0,-.61,.075]);return fr;}
+ animations.push(t=>{frameGlow.intensity=.58+Math.sin(t*1.15+glowPhase)*.12;});const loader=new THREE.TextureLoader();const pm=new THREE.MeshBasicMaterial({color:i%2?0x6f4063:0x34546c});const memoryUrl=(window.MEMORY_IMAGES&&window.MEMORY_IMAGES[i])||new URL(`memories/memory-${i+1}.jpg`,document.baseURI).href;loader.load(memoryUrl,tex=>{tex.colorSpace=THREE.SRGBColorSpace;pm.map=tex;pm.color.set(0xffffff);pm.needsUpdate=true;},undefined,()=>{});addMesh(fr,new THREE.PlaneGeometry(1.16,1.12),pm,[0,.18,.067]);addMesh(fr,new THREE.BoxGeometry(.8,.035,.03),mat(0xd7a9ba),[0,-.61,.075]);return fr;}
 function makeLoveMachine(){
  const r=new THREE.Group();
  // Retro love-bot inspired by the approved reference: rounded head, real body, limbs and animated controls.
@@ -1005,7 +1005,7 @@ function runScan(){
 function finale(){magicBurst();play('success.mp3');const st=performance.now();function a(n){const p=Math.min(1,(n-st)/2000);finalHeart.rotation.y=p*Math.PI*2;finalHeart.scale.setScalar(1+p*.5+Math.sin(p*Math.PI*8)*.04);if(p<1)requestAnimationFrame(a)}requestAnimationFrame(a)}
 
 const memoryPanel=document.querySelector('#memoryPanel');document.querySelectorAll('.close').forEach(b=>b.onclick=()=>{const host=b.closest('.panel, .feedback-dock');if(host)host.classList.add('hidden');});
-function openMemory(i){document.querySelector('#memoryImg').src=(window.MEMORY_IMAGES&&window.MEMORY_IMAGES[i])||new URL(`memories/memory-${i+1}.svg`,document.baseURI).href;document.querySelector('#memoryTitle').textContent=`Memory ${i+1}`;document.querySelector('#memoryText').textContent=['One tiny moment that became important to me.','One of those days I would happily live again.','A picture, but also a whole feeling.','Somehow ordinary days became memories with you.','I remember how I felt here more than anything else.','One for the forever folder.','Still one of my favourite chapters.'][i];memoryPanel.classList.remove('hidden');play('memory.mp3')}
+function openMemory(i){document.querySelector('#memoryImg').src=(window.MEMORY_IMAGES&&window.MEMORY_IMAGES[i])||new URL(`memories/memory-${i+1}.jpg`,document.baseURI).href;document.querySelector('#memoryTitle').textContent=`Memory ${i+1}`;document.querySelector('#memoryText').textContent=['One tiny moment that became important to me.','One of those days I would happily live again.','A picture, but also a whole feeling.','Somehow ordinary days became memories with you.','I remember how I felt here more than anything else.','One for the forever folder.','Still one of my favourite chapters.'][i];memoryPanel.classList.remove('hidden');play('memory.mp3')}
 
 const feedback=[
  ['Do you feel cared for by me?','select',['Not enough','Sometimes','Most of the time','Very much']],
